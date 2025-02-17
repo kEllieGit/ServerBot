@@ -173,19 +173,24 @@ client.on(Events.InteractionCreate, async (interaction) => {
         return;
       }
 
-      const xpForNextLevel = getXpForNextLevel(user.level);
-      const profileEmbed = new EmbedBuilder()
-        .setColor("#0099ff")
-        .setTitle(`${user.username}'s Profile`)
-        .addFields(
-          {
-            name: "Created",
-            value: user.createdAt.toLocaleDateString(),
-            inline: true,
-          },
-          { name: "Level", value: user.level.toString(), inline: false },
-          { name: "XP", value: `${user.xp}/${xpForNextLevel}`, inline: false }
-        );
+    const xpForNextLevel = getXpForNextLevel(user.level);
+    const progressBarLength = 20;
+    const progress = Math.round((user.xp / xpForNextLevel) * progressBarLength);
+    const progressBar = "█".repeat(progress) + "░".repeat(progressBarLength - progress);
+
+    const profileEmbed = new EmbedBuilder()
+      .setColor("#0099ff")
+      .setTitle(`${user.username}'s Profile`)
+      .addFields(
+        {
+        name: "Created",
+        value: user.createdAt.toLocaleDateString(),
+        inline: true,
+        },
+        { name: "Level", value: user.level.toString(), inline: false },
+        { name: "XP", value: `${user.xp}/${xpForNextLevel}`, inline: false },
+        { name: "Progress", value: progressBar, inline: false }
+      );
 
       await interaction.reply({ embeds: [profileEmbed] });
     } catch (error) {
