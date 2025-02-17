@@ -12,5 +12,6 @@ model User {
   discordId     String   @unique
   username      String
   createdAt     DateTime @default(now())
-  lastActive    DateTime @default(now())
+  level         Int      @default(0)
+  xp            Float    @default(0)
 }
