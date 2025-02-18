@@ -1,6 +1,6 @@
 import { ChatInputCommandInteraction, EmbedBuilder } from "discord.js";
-import { getXpForNextLevel } from "../leveling";
 import { Command } from "../commandHandler";
+import Leveling from "../leveling";
 import prisma from "../database";
 
 @Command({
@@ -47,7 +47,7 @@ export class ProfileCommand {
                 }
             }
 
-            const xpForNextLevel = getXpForNextLevel(user.level);
+            const xpForNextLevel = Leveling.getXpForNextLevel(user.level);
             const progressBarLength = 20;
             const progress = Math.round((user.xp / xpForNextLevel) * progressBarLength);
             const progressBar = "█".repeat(progress) + "░".repeat(progressBarLength - progress);

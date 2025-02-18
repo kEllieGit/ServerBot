@@ -9,13 +9,7 @@ import {
 import dotenv from "dotenv";
 import prisma from "./database";
 import { getCommands } from "./commandHandler";
-import { 
-    XP_PER_MESSAGE, 
-    MAX_LEVEL,
-    IGNORED_CHANNELS, 
-    getXpForNextLevel, 
-    sendLevelUpMessage 
-} from "./leveling";
+import Leveling from "./leveling";
 
 dotenv.config();
 
@@ -60,19 +54,19 @@ client.once(Events.ClientReady, async (client) => {
 });
 
 client.on(Events.MessageCreate, async (message) => {
-    if (message.author.bot || IGNORED_CHANNELS.includes(message.channel.id))
+    if (message.author.bot || Leveling.IGNORED_CHANNELS.includes(message.channel.id))
         return;
 
     try {
         const user = await prisma.user.findUnique({ where: { discordId: message.author.id } });
         if (!user) return;
 
-        let newXp = user.xp + XP_PER_MESSAGE;
+        let newXp = user.xp + Leveling.XP_PER_MESSAGE;
         let newLevel = user.level;
         let leveledUp = false;
 
-        while (newXp >= getXpForNextLevel(newLevel) && newLevel < MAX_LEVEL) {
-            newXp -= getXpForNextLevel(newLevel);
+        while (newXp >= Leveling.getXpForNextLevel(newLevel) && newLevel < Leveling.MAX_LEVEL) {
+            newXp -= Leveling.getXpForNextLevel(newLevel);
             newLevel++;
             leveledUp = true;
         }
@@ -82,7 +76,7 @@ client.on(Events.MessageCreate, async (message) => {
             data: { xp: newXp, level: newLevel },
         });
 
-        if (leveledUp) await sendLevelUpMessage(user, newLevel, message);
+        if (leveledUp) await Leveling.sendLevelUpMessage(user, newLevel, message);
     } catch (error) {
         console.error(error);
     }
