@@ -39,7 +39,6 @@ client.once(Events.ClientReady, async (client) => {
     }));
 
     try {
-        // Clear and update commands
         await rest.put(
             Routes.applicationGuildCommands(client.user.id, GUILD_ID),
             { body: commands }
@@ -70,18 +69,33 @@ client.on(Events.MessageCreate, async (message) => {
         let newLevel = user.level;
         let leveledUp = false;
 
-        while (newXp >= Leveling.getXpForNextLevel(newLevel) && newLevel < Leveling.MAX_LEVEL) {
-            newXp -= Leveling.getXpForNextLevel(newLevel);
+        const xpForNextLevel = Leveling.getXpForNextLevel(newLevel);
+        if (newXp >= xpForNextLevel && newLevel < Leveling.MAX_LEVEL) {
+            newXp -= xpForNextLevel;
             newLevel++;
             leveledUp = true;
         }
 
+        type UpdateData = {
+            xp: number;
+            level: number;
+            balance?: number;
+        };
+
+        const updateData: UpdateData = {
+            xp: newXp,
+            level: newLevel
+        };
+
+        if (leveledUp) {
+            updateData.balance = user.balance + 50;
+            await Leveling.sendLevelUpMessage(user, newLevel, message);
+        }
+
         await prisma.user.update({
             where: { discordId: message.author.id },
-            data: { xp: newXp, level: newLevel },
+            data: updateData,
         });
-
-        if (leveledUp) await Leveling.sendLevelUpMessage(user, newLevel, message);
     } catch (error) {
         console.error(error);
     }
