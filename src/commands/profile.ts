@@ -6,6 +6,7 @@ import prisma from "../database";
 @Command({
     name: "profile",
     description: "View your profile or another user's profile.",
+    registrationRequired: true,
     options: [
         {
             name: "username",

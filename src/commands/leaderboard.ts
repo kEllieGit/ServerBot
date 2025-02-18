@@ -4,7 +4,8 @@ import prisma from "../database";
 
 @Command({
     name: "leaderboard",
-    description: "View the top 5 users by level."
+    description: "View the top 5 users by level.",
+    registrationRequired: true
 })
 export class LeaderboardCommand {
     static async execute(interaction: ChatInputCommandInteraction) {

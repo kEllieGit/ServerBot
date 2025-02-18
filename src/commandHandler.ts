@@ -14,6 +14,7 @@ interface Command {
         type: ApplicationCommandOptionType;
         required?: boolean;
     }[];
+    registrationRequired?: boolean;
     requiredRole?: string;
     execute: CommandExecute;
 }
@@ -27,22 +28,25 @@ export function Command(data: Omit<Command, "execute">) {
                 where: { discordId: interaction.user.id },
             });
 
-            if (!user) {
-                await interaction.reply({ content: "You are not registered in the database. Use the /register command to register!", ephemeral: true });
+            if (!user && data.registrationRequired) {
+                await interaction.reply({ content: "To use this command you must be registered. Use the /register command to register!", ephemeral: true });
                 return;
             }
 
-            await prisma.user.update({
-                where: { discordId: interaction.user.id },
-                data: {
-                    lastActiveAt: new Date(),
-                },
-            });
+            if (user)
+            {
+                await prisma.user.update({
+                    where: { discordId: interaction.user.id },
+                    data: {
+                        lastActiveAt: new Date(),
+                    },
+                });
 
-            if (data.requiredRole) {
-                if (user.role !== data.requiredRole) {
-                    await interaction.reply({ content: `This command requires the ${data.requiredRole} role!`, ephemeral: true });
-                    return;
+                if (data.requiredRole) {
+                    if (user.role !== data.requiredRole) {
+                        await interaction.reply({ content: `This command requires the ${data.requiredRole} role!`, ephemeral: true });
+                        return;
+                    }
                 }
             }
 
