@@ -4,7 +4,7 @@ import prisma from "../database";
 
 @Command({
     name: "register",
-    description: "Create a new profile.",
+    description: "Create a new profile."
 })
 export class RegisterCommand {
     static async execute(interaction: ChatInputCommandInteraction) {

@@ -11,9 +11,9 @@ import prisma from "../database";
             name: "username",
             description: "The username of the profile to view",
             type: 3,
-            required: false,
-        },
-    ],
+            required: false
+        }
+    ]
 })
 export class ProfileCommand {
     static async execute(interaction: ChatInputCommandInteraction) {
