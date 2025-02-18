@@ -57,18 +57,11 @@ export class ProfileCommand {
                 .setColor("#0099ff")
                 .setTitle(`${user.username}'s Profile`)
                 .addFields(
-                    {
-                        name: "Created",
-                        value: user.createdAt.toLocaleDateString(),
-                        inline: true,
-                    },
-                    {
-                        name: "Role",
-                        value: user.role.toString(),
-                        inline: true,
-                    },
-                    { name: "Level", value: user.level.toString(), inline: false },
-                    { name: "XP", value: `${user.xp}/${xpForNextLevel}`, inline: false },
+                    { name: "Created", value: user.createdAt.toLocaleDateString(), inline: true },
+                    { name: "Role", value: user.role.toString(), inline: true },
+                    { name: "Balance", value: `${user.balance.toString()}$`, inline: false },
+                    { name: "Level", value: user.level.toString(), inline: true },
+                    { name: "XP", value: `${user.xp}/${xpForNextLevel}`, inline: true },
                     { name: "Progress", value: progressBar, inline: false }
                 );
 

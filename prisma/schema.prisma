@@ -21,6 +21,7 @@ model User {
   lastActiveAt  DateTime @default(now())
   deletedAt     DateTime?
   role          Role     @default(USER)
+  balance       Float    @default(100)
   level         Int      @default(0)
   xp            Float    @default(0)
 
