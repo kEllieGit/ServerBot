@@ -8,6 +8,8 @@ RUN npm install
 
 RUN npm run build
 
+RUN node_modules/.bin/prisma generate --schema ./prisma/schema.prisma
+
 # @todo: ports?
 
-CMD ["node", "dist/index.js"]
+CMD ["npm", "run", "start"]
