@@ -28,13 +28,12 @@ export function Command(data: Omit<Command, "execute">) {
                 where: { discordId: interaction.user.id },
             });
 
-            if (!user && data.registrationRequired) {
-                await interaction.reply({ content: "To use this command you must be registered. Use the /register command to register!", ephemeral: true });
-                return;
-            }
-
-            if (user)
-            {
+            if (!user) {
+                if (data.registrationRequired) {
+                    await interaction.reply({ content: "To use this command you must be registered. Use the /register command to register!", ephemeral: true });
+                    return;
+                }
+            } else {
                 await prisma.user.update({
                     where: { discordId: interaction.user.id },
                     data: {
@@ -42,11 +41,9 @@ export function Command(data: Omit<Command, "execute">) {
                     },
                 });
 
-                if (data.requiredRole) {
-                    if (user.role !== data.requiredRole) {
-                        await interaction.reply({ content: `This command requires the ${data.requiredRole} role!`, ephemeral: true });
-                        return;
-                    }
+                if (data.requiredRole && user.role !== data.requiredRole) {
+                    await interaction.reply({ content: `This command requires the ${data.requiredRole} role!`, ephemeral: true });
+                    return;
                 }
             }
 
@@ -57,7 +54,6 @@ export function Command(data: Omit<Command, "execute">) {
         commands.push({ ...data, execute: wrappedExecute });
     };
 }
-
 
 export function getCommands(): Command[] {
     if (commands.length > 0) return commands;
