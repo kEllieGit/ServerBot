@@ -9,6 +9,13 @@ import {
 import dotenv from "dotenv";
 import prisma from "./database";
 import { getCommands } from "./commandHandler";
+import { 
+    XP_PER_MESSAGE, 
+    MAX_LEVEL,
+    IGNORED_CHANNELS, 
+    getXpForNextLevel, 
+    sendLevelUpMessage 
+} from "./leveling";
 
 dotenv.config();
 
@@ -22,26 +29,6 @@ const client = new Client({
 
 const GUILD_ID = "811256944953262102";
 const LOG_CHANNEL_ID = "1341168478861922434";
-const XP_PER_MESSAGE = 1;
-const MAX_LEVEL = 50;
-const IGNORED_CHANNELS = ["1341107978455089243"];
-
-export function getXpForNextLevel(level: number): number {
-    return 100 * level;
-}
-
-async function sendLevelUpMessage(user: any, newLevel: number, message: any) {
-    await message.channel.send({
-        embeds: [
-            {
-                color: 0x00ff00,
-                title: "🎉 Level Up! 🎉",
-                description: `Congratulations ${user.username}, you have reached level ${newLevel}!`,
-                timestamp: new Date().toISOString(),
-            },
-        ],
-    });
-}
 
 client.once(Events.ClientReady, async (client) => {
     console.log(`Ready! Logged in as ${client.user.tag}`);

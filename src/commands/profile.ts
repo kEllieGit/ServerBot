@@ -1,5 +1,5 @@
 import { ChatInputCommandInteraction, EmbedBuilder } from "discord.js";
-import { getXpForNextLevel } from "../index";
+import { getXpForNextLevel } from "../leveling";
 import { Command } from "../commandHandler";
 import prisma from "../database";
 
