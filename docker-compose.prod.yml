@@ -1,8 +1,10 @@
 version: '3.8'
 
 services:
-  postgres:
+  serverbot-postgres:
     restart: always
+    env_file:
+      - stack.env
     volumes:
       - ./data/postgres:/var/lib/postgresql/data
     expose:
@@ -21,3 +23,5 @@ services:
   discord-bot:
     restart: always
     image: awilderin/serverbot:latest
+    env_file:
+      - stack.env

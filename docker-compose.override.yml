@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  postgres:
+  serverbot-postgres:
     restart: always
     env_file:
       - .env
