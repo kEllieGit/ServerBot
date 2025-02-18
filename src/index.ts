@@ -61,6 +61,11 @@ client.on(Events.MessageCreate, async (message) => {
         const user = await prisma.user.findUnique({ where: { discordId: message.author.id } });
         if (!user) return;
 
+        await prisma.user.update({
+            where: { discordId: message.author.id },
+            data: { lastActiveAt: new Date() },
+        });
+
         let newXp = user.xp + Leveling.XP_PER_MESSAGE;
         let newLevel = user.level;
         let leveledUp = false;

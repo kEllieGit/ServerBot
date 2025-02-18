@@ -23,29 +23,37 @@ const commands: Command[] = [];
 export function Command(data: Omit<Command, "execute">) {
     return function (target: { execute: CommandExecute }) {
         const wrappedExecute: CommandExecute = async (interaction) => {
+            const user = await prisma.user.findUnique({
+                where: { discordId: interaction.user.id },
+            });
+
+            if (!user) {
+                await interaction.reply({ content: "You are not registered in the database. Use the /register command to register!", ephemeral: true });
+                return;
+            }
+
+            await prisma.user.update({
+                where: { discordId: interaction.user.id },
+                data: {
+                    lastActiveAt: new Date(),
+                },
+            });
+
             if (data.requiredRole) {
-                const user = await prisma.user.findUnique({
-                    where: { discordId: interaction.user.id },
-                    select: { role: true },
-                });
-
-                if (!user) {
-                    await interaction.reply({ content: "You are not registered in the database.", ephemeral: true });
-                    return;
-                }
-
                 if (user.role !== data.requiredRole) {
-                    await interaction.reply({ content: `This command requires the ${data.requiredRole} role to access!`, ephemeral: true });
+                    await interaction.reply({ content: `This command requires the ${data.requiredRole} role!`, ephemeral: true });
                     return;
                 }
             }
 
-            await target.execute(interaction); // Runs the command if role check passes
+            // Execute the actual command
+            await target.execute(interaction);
         };
 
         commands.push({ ...data, execute: wrappedExecute });
     };
 }
+
 
 export function getCommands(): Command[] {
     if (commands.length > 0) return commands;
