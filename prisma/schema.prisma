@@ -7,11 +7,23 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Role {
+  USER
+  DONATOR
+  ADMIN
+}
+
 model User {
   id            String   @id @default(uuid())
   discordId     String   @unique
   username      String   @unique
   createdAt     DateTime @default(now())
+  lastActiveAt  DateTime @default(now())
+  deletedAt     DateTime?
+  role          Role     @default(USER)
   level         Int      @default(0)
   xp            Float    @default(0)
+
+  @@index([discordId])
+  @@index([username])
 }
