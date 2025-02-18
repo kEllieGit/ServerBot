@@ -62,6 +62,11 @@ export class ProfileCommand {
                         value: user.createdAt.toLocaleDateString(),
                         inline: true,
                     },
+                    {
+                        name: "Role",
+                        value: user.role.toString(),
+                        inline: true,
+                    },
                     { name: "Level", value: user.level.toString(), inline: false },
                     { name: "XP", value: `${user.xp}/${xpForNextLevel}`, inline: false },
                     { name: "Progress", value: progressBar, inline: false }
