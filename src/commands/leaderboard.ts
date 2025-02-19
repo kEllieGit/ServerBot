@@ -1,4 +1,4 @@
-import { ChatInputCommandInteraction, EmbedBuilder } from "discord.js";
+import { ChatInputCommandInteraction, EmbedBuilder, MessageFlags } from "discord.js";
 import { Command } from "../commandHandler";
 import prisma from "../database";
 
@@ -19,7 +19,7 @@ export class LeaderboardCommand {
             if (topUsers.length === 0) {
                 await interaction.reply({
                     content: "No users found in the leaderboard.",
-                    ephemeral: true,
+                    flags: MessageFlags.Ephemeral,
                 });
                 return;
             }
@@ -39,7 +39,7 @@ export class LeaderboardCommand {
             console.error(error);
             await interaction.reply({
                 content: "Error fetching leaderboard!",
-                ephemeral: true,
+                flags: MessageFlags.Ephemeral,
             });
         }
     }

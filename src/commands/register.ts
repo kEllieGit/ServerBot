@@ -1,4 +1,4 @@
-import { ChatInputCommandInteraction } from "discord.js";
+import { ChatInputCommandInteraction, MessageFlags } from "discord.js";
 import { Command } from "../commandHandler";
 import prisma from "../database";
 
@@ -16,7 +16,7 @@ export class RegisterCommand {
             if (existingUser) {
                 await interaction.reply({
                     content: "You already have a profile! Use /profile to view it.",
-                    ephemeral: true,
+                    flags: MessageFlags.Ephemeral,
                 });
                 return;
             }
@@ -42,13 +42,13 @@ export class RegisterCommand {
 
             await interaction.reply({
                 content: `✅ Profile created successfully for ${user.username}!`,
-                ephemeral: true,
+                flags: MessageFlags.Ephemeral,
             });
         } catch (error) {
             console.error(error);
             await interaction.reply({
                 content: "❌ Error creating profile!",
-                ephemeral: true,
+                flags: MessageFlags.Ephemeral,
             });
         }
     }

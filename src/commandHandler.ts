@@ -1,4 +1,4 @@
-import { ChatInputCommandInteraction, ApplicationCommandOptionType } from "discord.js";
+import { ChatInputCommandInteraction, ApplicationCommandOptionType, MessageFlags } from "discord.js";
 import { readdirSync } from "fs";
 import { join } from "path";
 import prisma from "./database";
@@ -30,7 +30,10 @@ export function Command(data: Omit<Command, "execute">) {
 
             if (!user) {
                 if (data.registrationRequired) {
-                    await interaction.reply({ content: "To use this command you must be registered. Use the /register command to register!", ephemeral: true });
+                    await interaction.reply({ 
+                        content: "To use this command you must be registered. Use the /register command to register!", 
+                        flags: MessageFlags.Ephemeral,
+                    });
                     return;
                 }
             } else {
@@ -42,7 +45,10 @@ export function Command(data: Omit<Command, "execute">) {
                 });
 
                 if (data.requiredRole && user.role !== data.requiredRole) {
-                    await interaction.reply({ content: `This command requires the ${data.requiredRole} role!`, ephemeral: true });
+                    await interaction.reply({ 
+                        content: `This command requires the ${data.requiredRole} role!`, 
+                        flags: MessageFlags.Ephemeral,
+                    });
                     return;
                 }
             }

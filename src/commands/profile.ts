@@ -1,4 +1,4 @@
-import { ChatInputCommandInteraction, EmbedBuilder } from "discord.js";
+import { ChatInputCommandInteraction, EmbedBuilder, MessageFlags } from "discord.js";
 import { Command } from "../commandHandler";
 import Leveling from "../leveling";
 import prisma from "../database";
@@ -30,7 +30,7 @@ export class ProfileCommand {
                 if (!user) {
                     await interaction.reply({
                         content: `No profile found for user: ${targetUser}`,
-                        ephemeral: true,
+                        flags: MessageFlags.Ephemeral,
                     });
                     return;
                 }
@@ -42,7 +42,7 @@ export class ProfileCommand {
                 if (!user) {
                     await interaction.reply({
                         content: "No profile found! Use /register to create one.",
-                        ephemeral: true,
+                        flags: MessageFlags.Ephemeral,
                     });
                     return;
                 }
@@ -72,7 +72,7 @@ export class ProfileCommand {
             console.error(error);
             await interaction.reply({
                 content: "Error fetching profile!",
-                ephemeral: true,
+                flags: MessageFlags.Ephemeral,
             });
         }
     }

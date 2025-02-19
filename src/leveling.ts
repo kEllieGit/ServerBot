@@ -3,9 +3,9 @@ import prisma from "./database";
 
 const Leveling = {
     XP_PER_MESSAGE: 1,
+    LEVEL_UP_BONUS: 50,
     MAX_LEVEL: 50,
     IGNORED_CHANNELS: ["1341107978455089243"],
-    LEVEL_UP_BONUS: 50,
 
     getXpForNextLevel(level: number): number {
         return 100 * level;

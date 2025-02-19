@@ -1,4 +1,4 @@
-import { ChatInputCommandInteraction, EmbedBuilder } from "discord.js";
+import { ChatInputCommandInteraction, EmbedBuilder, MessageFlags } from "discord.js";
 import { Command } from "../commandHandler";
 import prisma from "../database";
 
@@ -28,7 +28,7 @@ export class SendCommand {
         if (!targetUser) {
             await interaction.reply({
                 content: "Please specify a valid user to send money to.",
-                ephemeral: true,
+                flags: MessageFlags.Ephemeral,
             });
             return;
         }
@@ -36,7 +36,7 @@ export class SendCommand {
         if (!amount) {
             await interaction.reply({
                 content: "You must specify an amount to send!",
-                ephemeral: true,
+                flags: MessageFlags.Ephemeral,
             });
             return;
         }
@@ -44,7 +44,7 @@ export class SendCommand {
         if (amount <= 0) {
             await interaction.reply({
                 content: "Amount must be greater than 0.",
-                ephemeral: true,
+                flags: MessageFlags.Ephemeral,
             });
             return;
         }
@@ -52,7 +52,7 @@ export class SendCommand {
         if (targetUser.id === interaction.user.id) {
             await interaction.reply({
                 content: "You cannot send money to yourself!",
-                ephemeral: true,
+                flags: MessageFlags.Ephemeral,
             });
             return;
         }
@@ -64,7 +64,7 @@ export class SendCommand {
         if (!sender) {
             await interaction.reply({
                 content: "You don't have an account yet!",
-                ephemeral: true,
+                flags: MessageFlags.Ephemeral,
             });
             return;
         }
@@ -76,7 +76,7 @@ export class SendCommand {
         if (!recipient) {
             await interaction.reply({
                 content: "The recipient doesn't have an account yet!",
-                ephemeral: true,
+                flags: MessageFlags.Ephemeral,
             });
             return;
         }
@@ -84,7 +84,7 @@ export class SendCommand {
         if (sender.balance < amount) {
             await interaction.reply({
                 content: "You do not have enough money to send.",
-                ephemeral: true,
+                flags: MessageFlags.Ephemeral,
             });
             return;
         }

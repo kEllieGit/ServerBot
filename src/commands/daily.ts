@@ -1,4 +1,4 @@
-import { ChatInputCommandInteraction, EmbedBuilder, Colors, TextChannel } from "discord.js";
+import { ChatInputCommandInteraction, EmbedBuilder, MessageFlags, Colors, TextChannel } from "discord.js";
 import { Command } from "../commandHandler";
 import prisma from "../database";
 import Leveling from "../leveling";
@@ -29,7 +29,7 @@ export class DailyCommand {
         if (lastClaimed && now.toDateString() === lastClaimed.toDateString()) {
             await interaction.reply({
                 content: "You have already claimed your daily allowance today.",
-                ephemeral: true,
+                flags: MessageFlags.Ephemeral,
             });
             return;
         }
