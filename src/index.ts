@@ -53,51 +53,22 @@ client.once(Events.ClientReady, async (client) => {
 });
 
 client.on(Events.MessageCreate, async (message) => {
-    if (message.author.bot || Leveling.IGNORED_CHANNELS.includes(message.channel.id))
+    if (message.author.bot || Leveling.IGNORED_CHANNELS.includes(message.channel.id)) {
         return;
+    }
 
     try {
-        const user = await prisma.user.findUnique({ where: { discordId: message.author.id } });
-        if (!user) return;
-
-        await prisma.user.update({
-            where: { discordId: message.author.id },
-            data: { lastActiveAt: new Date() },
-        });
-
-        let newXp = user.xp + Leveling.XP_PER_MESSAGE;
-        let newLevel = user.level;
-        let leveledUp = false;
-
-        const xpForNextLevel = Leveling.getXpForNextLevel(newLevel);
-        if (newXp >= xpForNextLevel && newLevel < Leveling.MAX_LEVEL) {
-            newXp -= xpForNextLevel;
-            newLevel++;
-            leveledUp = true;
+        const updatedUser = await Leveling.giveXP(
+            message.author.id, 
+            Leveling.XP_PER_MESSAGE,
+            message.channel as TextChannel
+        );
+        
+        if (!updatedUser) {
+            console.log(`User ${message.author.id} not found in database`);
         }
-
-        type UpdateData = {
-            xp: number;
-            level: number;
-            balance?: number;
-        };
-
-        const updateData: UpdateData = {
-            xp: newXp,
-            level: newLevel
-        };
-
-        if (leveledUp) {
-            updateData.balance = user.balance + 50;
-            await Leveling.sendLevelUpMessage(user, newLevel, message);
-        }
-
-        await prisma.user.update({
-            where: { discordId: message.author.id },
-            data: updateData,
-        });
     } catch (error) {
-        console.error(error);
+        console.error('Error processing message XP:', error);
     }
 });
 
