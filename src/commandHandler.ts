@@ -28,15 +28,19 @@ export function Command(data: Omit<Command, "execute">) {
                 where: { discordId: interaction.user.id },
             });
 
-            if (!user) {
-                if (data.registrationRequired) {
+            // First check if registration is required
+            if (data.registrationRequired || data.requiredRole) {
+                if (!user) {
                     await interaction.reply({ 
                         content: "To use this command you must be registered. Use the /register command to register!", 
                         flags: MessageFlags.Ephemeral,
                     });
                     return;
                 }
-            } else {
+            }
+
+            // If user exists, update their last active timestamp
+            if (user) {
                 await prisma.user.update({
                     where: { discordId: interaction.user.id },
                     data: {
@@ -44,6 +48,7 @@ export function Command(data: Omit<Command, "execute">) {
                     },
                 });
 
+                // Check for required role only if user exists
                 if (data.requiredRole && user.role !== data.requiredRole) {
                     await interaction.reply({ 
                         content: `This command requires the ${data.requiredRole} role!`, 
