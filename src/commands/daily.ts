@@ -1,4 +1,4 @@
-import { ChatInputCommandInteraction, EmbedBuilder, MessageFlags, Colors, TextChannel } from "discord.js";
+import { ChatInputCommandInteraction, EmbedBuilder, MessageFlags, Colors, TextChannel, GuildMember } from "discord.js";
 import { Command } from "../commandHandler";
 import prisma from "../database";
 import Leveling from "../leveling";
@@ -42,7 +42,8 @@ export class DailyCommand {
             }
         });
 
-        const updatedUser = await Leveling.giveXP(user.discordId, dailyXP, interaction.channel as TextChannel);
+        const member = interaction.member as GuildMember;
+        const updatedUser = await Leveling.giveXP(user.discordId, member, dailyXP, interaction.channel as TextChannel);
 
         if (!updatedUser) {
             await interaction.reply("An error occurred while updating your profile.");

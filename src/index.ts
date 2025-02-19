@@ -5,10 +5,11 @@ import {
     REST,
     Routes,
     TextChannel,
+    GuildMember
 } from "discord.js";
+import { getCommands } from "./commandHandler";
 import dotenv from "dotenv";
 import prisma from "./database";
-import { getCommands } from "./commandHandler";
 import Leveling from "./leveling";
 import Logging from "./logging";
 
@@ -58,8 +59,10 @@ client.on(Events.MessageCreate, async (message) => {
     }
 
     try {
+        const member = message.member as GuildMember;
         const updatedUser = await Leveling.giveXP(
-            message.author.id, 
+            message.author.id,
+            member,
             Leveling.XP_PER_MESSAGE,
             message.channel as TextChannel
         );
@@ -82,7 +85,7 @@ client.on(Events.GuildMemberRemove, async (member) => {
                 where: { discordId: member.id },
             });
 
-            Logging.log(client.guilds.cache.get(GUILD_ID), `Deleted user from database ${member.user.displayName} on server leave.`);
+            Logging.log(client.guilds.cache.get(GUILD_ID), `Deleted user ${member.user.displayName} from database because they left the server!`);
         }
     }
     catch (error) {

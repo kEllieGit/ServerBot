@@ -1,23 +1,55 @@
-import { TextChannel } from "discord.js";
+import { TextChannel, GuildMember } from "discord.js";
 import prisma from "./database";
 
-const Leveling = {
-    XP_PER_MESSAGE: 1,
-    LEVEL_UP_BONUS: 50,
-    MAX_LEVEL: 50,
-    IGNORED_CHANNELS: ["1341107978455089243"],
+class LevelingSystem {
+    public static instance: LevelingSystem = new LevelingSystem();
+    
+    public readonly XP_PER_MESSAGE: number = 1;
+    public readonly LEVEL_UP_BONUS: number = 50;
+    public readonly MAX_LEVEL: number = 50;
+    public readonly IGNORED_CHANNELS: string[] = ["1341107978455089243"];
+    
+    public roleMultipliers: Map<string, number> = new Map();
 
-    getXpForNextLevel(level: number): number {
+    private constructor() {
+        this.roleMultipliers.set("1273709101938905225", 2);
+        this.roleMultipliers.set("1264261544825323590", 1.5);
+        this.roleMultipliers.set("1341890748731228375", 1.5);
+    }
+
+    public getXpForNextLevel(level: number): number {
         return 100 * level;
-    },
+    }
+    
+    private getMultiplierForMember(member: GuildMember): number {
+        let highestMultiplier = 1.0;
+        
+        member.roles.cache.forEach(role => {
+            const multiplier = this.roleMultipliers.get(role.id);
+            if (multiplier && multiplier > highestMultiplier) {
+                highestMultiplier = multiplier;
+            }
+        });
+        
+        return highestMultiplier;
+    }
 
-    async giveXP(userId: string, xpAmount: number, channel?: TextChannel) {
+    public async giveXP(userId: string, member: GuildMember, xp: number, channel?: TextChannel) {
         try {
+            if (channel && this.IGNORED_CHANNELS.includes(channel.id)) {
+                return null;
+            }
+
             const user = await prisma.user.findUnique({ 
                 where: { discordId: userId } 
             });
             
-            if (!user) return null;
+            if (!user) {
+                return null;
+            }
+
+            const multiplier = this.getMultiplierForMember(member);
+            const xpAmount = Math.floor(xp * multiplier);
 
             let newXp = user.xp + xpAmount;
             let newLevel = user.level;
@@ -35,30 +67,27 @@ const Leveling = {
                 leveledUp = true;
             }
 
-            const updateData = {
-                xp: newXp,
-                level: newLevel,
-                ...(leveledUp && { balance: user.balance + this.LEVEL_UP_BONUS })
-            };
-
             const updatedUser = await prisma.user.update({
                 where: { discordId: userId },
-                data: updateData,
+                data: {
+                    xp: newXp,
+                    level: newLevel,
+                    ...(leveledUp && { balance: user.balance + this.LEVEL_UP_BONUS })
+                },
             });
 
-            // Send level up message if applicable
             if (leveledUp && channel) {
                 await this.sendLevelUpMessage(user, newLevel, channel);
             }
 
             return updatedUser;
         } catch (error) {
-            console.error('Error in giveXP:', error);
+            console.error('Error while giving XP:', error);
             return null;
         }
-    },
+    }
 
-    async sendLevelUpMessage(user: any, newLevel: number, channel: TextChannel) {
+    private async sendLevelUpMessage(user: any, newLevel: number, channel: TextChannel) {
         try {
             await channel.send({
                 embeds: [{
@@ -72,6 +101,10 @@ const Leveling = {
             console.error('Error sending level up message:', error);
         }
     }
-};
 
-export default Leveling;
+    public setRoleMultiplier(roleId: string, multiplier: number): void {
+        this.roleMultipliers.set(roleId, multiplier);
+    }
+}
+
+export default LevelingSystem.instance;
