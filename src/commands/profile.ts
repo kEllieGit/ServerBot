@@ -9,9 +9,9 @@ import prisma from "../database";
     registrationRequired: true,
     options: [
         {
-            name: "username",
-            description: "The username of the profile to view",
-            type: 3,
+            name: "user",
+            description: "The user of the profile to view",
+            type: 6,
             required: false
         }
     ]
@@ -19,17 +19,17 @@ import prisma from "../database";
 export class ProfileCommand {
     static async execute(interaction: ChatInputCommandInteraction) {
         try {
-            const username = interaction.options.getString("username");
+            const targetUser = interaction.options.getUser("user");
             let user;
 
-            if (username) {
+            if (targetUser) {
                 user = await prisma.user.findUnique({
-                    where: { username: username },
+                    where: { discordId: targetUser.id },
                 });
 
                 if (!user) {
                     await interaction.reply({
-                        content: `No profile found for username: ${username}`,
+                        content: `No profile found for user: ${targetUser}`,
                         ephemeral: true,
                     });
                     return;
