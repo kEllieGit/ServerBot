@@ -14,16 +14,17 @@ enum Role {
 }
 
 model User {
-  id            String   @id @default(uuid())
-  discordId     String   @unique
-  username      String   @unique
-  createdAt     DateTime @default(now())
-  lastActiveAt  DateTime @default(now())
-  deletedAt     DateTime?
-  role          Role     @default(USER)
-  balance       Float    @default(100)
-  level         Int      @default(0)
-  xp            Float    @default(0)
+  id                 String   @id @default(uuid())
+  discordId          String   @unique
+  username           String   @unique
+  createdAt          DateTime @default(now())
+  lastActiveAt       DateTime @default(now())
+  lastClaimedDaily   DateTime?
+  deletedAt          DateTime?
+  role               Role     @default(USER)
+  balance            Float    @default(100)
+  level              Int      @default(0)
+  xp                 Float    @default(0)
 
   @@index([discordId])
   @@index([username])
