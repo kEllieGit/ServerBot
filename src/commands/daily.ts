@@ -10,8 +10,8 @@ import Leveling from "../leveling";
 export class DailyCommand {
     static async execute(interaction: ChatInputCommandInteraction) {
         const userId = interaction.user.id;
-        const dailyMoney = 50;
-        const dailyXP = 50;
+        const dailyMoney = 5;
+        const dailyXP = 10;
 
         const user = await prisma.user.findUnique({
             where: { discordId: userId }
