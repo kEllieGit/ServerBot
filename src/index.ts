@@ -10,6 +10,7 @@ import dotenv from "dotenv";
 import prisma from "./database";
 import { getCommands } from "./commandHandler";
 import Leveling from "./leveling";
+import Logging from "./logging";
 
 dotenv.config();
 
@@ -17,12 +18,12 @@ const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
         GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.GuildMembers,
         GatewayIntentBits.MessageContent,
     ],
 });
 
 const GUILD_ID = "811256944953262102";
-const LOG_CHANNEL_ID = "1341168478861922434";
 
 client.once(Events.ClientReady, async (client) => {
     console.log(`Ready! Logged in as ${client.user.tag}`);
@@ -45,8 +46,7 @@ client.once(Events.ClientReady, async (client) => {
         );
         console.log("Commands registered successfully!");
 
-        const channel = await client.channels.fetch(LOG_CHANNEL_ID) as TextChannel;
-        if (channel.isTextBased()) channel.send("🟢 Bot is now online!");
+        Logging.log(client.guilds.cache.get(GUILD_ID), "🟢 Bot is now online!");
     } catch (error) {
         console.error("Error refreshing commands:", error);
     }
@@ -72,6 +72,24 @@ client.on(Events.MessageCreate, async (message) => {
     }
 });
 
+client.on(Events.GuildMemberRemove, async (member) => {
+    try {
+        if (member.user.bot) return;
+
+        const user = await prisma.user.findUnique({ where: { discordId: member.user.id } });
+        if (user) {
+            await prisma.user.delete({
+                where: { discordId: member.id },
+            });
+
+            Logging.log(client.guilds.cache.get(GUILD_ID), `Deleted user from database ${member.user.displayName} on server leave.`);
+        }
+    }
+    catch (error) {
+        console.error('Error deleting user on leave:', error);
+    }
+});
+
 client.on(Events.InteractionCreate, async (interaction) => {
     if (!interaction.isChatInputCommand()) return;
 
@@ -82,8 +100,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
 async function shutdown() {
     console.log("Shutdown initiated");
     try {
-        const channel = await client.channels.fetch(LOG_CHANNEL_ID) as TextChannel;
-        if (channel.isTextBased()) await channel.send("🔴 Bot is now offline!");
+        Logging.log(client.guilds.cache.get(GUILD_ID), "🔴 Bot is now offline!");
     } catch (error) {
         console.error("Error during shutdown:", error);
     } finally {
