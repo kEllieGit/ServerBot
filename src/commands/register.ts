@@ -30,6 +30,16 @@ export class RegisterCommand {
                 },
             });
 
+            const guild = interaction.guild;
+            if (guild) {
+                const member = await guild.members.fetch(interaction.user.id);
+                const roleId = "1341103896168235019";
+                const role = guild.roles.cache.get(roleId);
+                if (role) {
+                    await member.roles.add(role);
+                }
+            }
+
             await interaction.reply({
                 content: `✅ Profile created successfully for ${user.username}!`,
                 ephemeral: true,
