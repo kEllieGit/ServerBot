@@ -13,18 +13,40 @@ enum Role {
   ADMIN
 }
 
+model Badge {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String
+  iconUrl     String?
+  createdAt   DateTime @default(now())
+
+  users       UserBadge[]
+}
+
+model UserBadge {
+  userId  String
+  badgeId String
+  awardedAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badge Badge @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+
+  @@id([userId, badgeId])
+}
+
 model User {
-  id                 String   @id @default(uuid())
-  discordId          String   @unique
-  username           String   @unique
-  createdAt          DateTime @default(now())
-  lastActiveAt       DateTime @default(now())
+  id                 String         @id @default(uuid())
+  discordId          String         @unique
+  username           String         @unique
+  createdAt          DateTime       @default(now())
+  lastActiveAt       DateTime       @default(now())
   lastClaimedDaily   DateTime?
   deletedAt          DateTime?
-  role               Role     @default(USER)
-  balance            Float    @default(100)
-  level              Int      @default(0)
-  xp                 Float    @default(0)
+  role               Role           @default(USER)
+  balance            Float          @default(100)
+  level              Int            @default(0)
+  xp                 Float          @default(0)
+  badges             UserBadge[]
 
   @@index([discordId])
   @@index([username])
