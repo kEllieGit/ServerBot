@@ -12,6 +12,7 @@ import dotenv from "dotenv";
 import prisma from "./database";
 import Leveling from "./leveling";
 import Logging from "./logging";
+import { populatePlatformField } from "./services/migration";
 
 dotenv.config();
 
@@ -25,6 +26,9 @@ const client = new Client({
 });
 
 const GUILD_ID = "811256944953262102";
+populatePlatformField()
+    .catch(console.error)
+    .finally(() => prisma.$disconnect())
 
 client.once(Events.ClientReady, async (client) => {
     console.log(`Ready! Logged in as ${client.user.tag}`);
