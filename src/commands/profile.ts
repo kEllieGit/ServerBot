@@ -38,7 +38,7 @@ export class ProfileCommand {
 
             if (!user) {
                 await interaction.reply({
-                    content: `No profile found for user: ${targetUser}`,
+                    content: `No profile found for user: ${targetUser}. Encourage them to register!`,
                     flags: MessageFlags.Ephemeral,
                 });
                 return;

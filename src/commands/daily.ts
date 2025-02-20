@@ -43,10 +43,10 @@ export class DailyCommand {
         });
 
         const member = interaction.member as GuildMember;
-        const updatedUser = await Leveling.giveXP(user.discordId, member, dailyXP, interaction.channel as TextChannel);
+        const updatedUser = await Leveling.giveXP(user.discordId!, member, dailyXP, interaction.channel as TextChannel);
 
         if (!updatedUser) {
-            await interaction.reply("An error occurred while updating your profile.");
+            await interaction.reply("An error occurred with receiving your daily allowance.");
             return;
         }
 
