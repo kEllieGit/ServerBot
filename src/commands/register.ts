@@ -25,6 +25,7 @@ export class RegisterCommand {
                 data: {
                     discordId: interaction.user.id,
                     username: interaction.user.username,
+                    platform: "discord",
                     xp: 0,
                     level: 1,
                 },
