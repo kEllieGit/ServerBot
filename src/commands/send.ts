@@ -91,11 +91,11 @@ export class SendCommand {
         
         await prisma.$transaction([
             prisma.user.update({
-                where: { discordId: sender.discordId },
+                where: { discordId: sender.discordId! },
                 data: { balance: sender.balance - amount },
             }),
             prisma.user.update({
-                where: { discordId: recipient.discordId },
+                where: { discordId: recipient.discordId! },
                 data: { balance: recipient.balance + amount },
             })
         ]);
