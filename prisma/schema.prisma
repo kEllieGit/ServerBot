@@ -38,7 +38,7 @@ model User {
   id                 String         @id @default(uuid())
   discordId          String?        @unique
   username           String         @unique
-  platform           String?
+  platform           String
   createdAt          DateTime       @default(now())
   lastActiveAt       DateTime       @default(now())
   lastClaimedDaily   DateTime?
@@ -49,6 +49,7 @@ model User {
   xp                 Float          @default(0)
   badges             UserBadge[]
 
+  @@unique([username, platform])
   @@index([discordId])
   @@index([username])
 }
