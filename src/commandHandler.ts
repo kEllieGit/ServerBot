@@ -24,13 +24,14 @@ const commands: Command[] = [];
 export function Command(data: Omit<Command, "execute">) {
     return function (target: { execute: CommandExecute }) {
         const wrappedExecute: CommandExecute = async (interaction) => {
-            const user = await prisma.user.findUnique({
-                where: { discordId: interaction.user.id },
+            const account = await prisma.account.findUnique({
+                where: { platform_platformId: { platform: "DISCORD", platformId: interaction.user.id } },
+                include: { user: true }
             });
 
             // First check if registration is required
             if (data.registrationRequired || data.requiredRole) {
-                if (!user) {
+                if (!account || !account.user) {
                     await interaction.reply({ 
                         content: "To use this command you must be registered. Use the /register command to register!", 
                         flags: MessageFlags.Ephemeral,
@@ -38,18 +39,14 @@ export function Command(data: Omit<Command, "execute">) {
                     return;
                 }
             }
-
-            // If user exists, update their last active timestamp
-            if (user) {
-                await prisma.user.update({
-                    where: { discordId: interaction.user.id },
-                    data: {
-                        lastActiveAt: new Date(),
-                    },
+            
+            if (account) {
+                await prisma.account.update({
+                    where: { platform_platformId: { platform: "DISCORD", platformId: interaction.user.id } },
+                    data: { user: { update: { lastActiveAt: new Date() } } },
                 });
 
-                // Check for required role only if user exists
-                if (data.requiredRole && user.role !== data.requiredRole) {
+                if (data.requiredRole && account.user.role !== data.requiredRole) {
                     await interaction.reply({ 
                         content: `This command requires the ${data.requiredRole} role!`, 
                         flags: MessageFlags.Ephemeral,

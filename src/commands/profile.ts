@@ -31,36 +31,45 @@ export class ProfileCommand {
             const targetUser = interaction.options.getUser("user") || interaction.user;
             const member = interaction.guild?.members.cache.get(targetUser.id);
             
-            const user = await prisma.user.findUnique({
-                where: { discordId: targetUser.id },
-                include: { badges: { include: { badge: true } } }
+            const account = await prisma.account.findUnique({
+                where: { platform_platformId: { platform: "DISCORD", platformId: targetUser.id } },
+                include: { 
+                    user: {
+                        include: {
+                            badges: {
+                                include: {
+                                    badge: true
+                                }
+                            }
+                        }
+                    }
+                }
             });
 
-            if (!user) {
+            if (!account || !account.user) {
                 await interaction.reply({
-                    content: `No profile found for user: ${targetUser}. Encourage them to register!`,
+                    content: `No profile found for user: ${targetUser}`,
                     flags: MessageFlags.Ephemeral,
                 });
                 return;
             }
 
-            if (!member)
-            {
+            if (!member) {
                 return;
             }
 
             let currentPage = 1;
             const pages = [
                 () => {
-                    const xpForNextLevel = Leveling.getXpForNextLevel(user.level);
+                    const xpForNextLevel = Leveling.getXpForNextLevel(account.user.level);
                     const progressBarLength = 15;
-                    const progress = Math.round((user.xp / xpForNextLevel) * progressBarLength);
+                    const progress = Math.round((account.user.xp / xpForNextLevel) * progressBarLength);
                     const progressBar = "▰".repeat(progress) + "▱".repeat(progressBarLength - progress);
                     
                     const multiplierInfo = getMultiplierInfo(member);
                     const multiplierDisplay = formatMultiplierDisplay(multiplierInfo);
 
-                    const createdDate = user.createdAt.toLocaleDateString('en-US', { 
+                    const createdDate = account.user.createdAt.toLocaleDateString('en-US', { 
                         year: 'numeric', 
                         month: 'short', 
                         day: 'numeric' 
@@ -68,15 +77,15 @@ export class ProfileCommand {
 
                     const embed = new EmbedBuilder()
                         .setColor("#0099ff")
-                        .setTitle(`${user.username}'s Profile`)
+                        .setTitle(`${account.user.username}'s Profile`)
                         .setDescription(`Account created: ${createdDate}`)
                         .addFields([
                             {
                                 name: "Stats",
                                 value: [
-                                    `Level: ${user.level}`,
-                                    `Balance: ${user.balance}$`,
-                                    `XP: ${user.xp}/${xpForNextLevel}`,
+                                    `Level: ${account.user.level}`,
+                                    `Balance: ${account.user.balance}$`,
+                                    `XP: ${account.user.xp}/${xpForNextLevel}`,
                                 ].join('\n'),
                                 inline: true
                             },
@@ -87,7 +96,7 @@ export class ProfileCommand {
                             },
                             {
                                 name: `Level Progress`,
-                                value: `${progressBar} ${Math.round((user.xp / xpForNextLevel) * 100)}%`,
+                                value: `${progressBar} ${Math.round((account.user.xp / xpForNextLevel) * 100)}%`,
                                 inline: false
                             }
                         ]);
@@ -99,11 +108,20 @@ export class ProfileCommand {
                     return embed;
                 },
                 () => {
-                    const badges = user.badges.map(ub => `• **${ub.badge.name}**\n  ${ub.badge.description}`).join("\n\n");
-                    return new EmbedBuilder()
+                    const badges = account.user.badges?.length 
+                        ? account.user.badges.map(ub => `• **${ub.badge.name}**\n  ${ub.badge.description}`).join("\n\n")
+                        : "*No Badges*";
+
+                    const embed = new EmbedBuilder()
                         .setColor("#0099ff")
-                        .setTitle(`${user.username}'s Badges`)
-                        .setDescription(badges || "*No Badges *")
+                        .setTitle(`${account.user.username}'s Badges`)
+                        .setDescription(badges);
+
+                    if (member?.user.avatarURL()) {
+                        embed.setThumbnail(member.user.avatarURL() || '');
+                    }
+
+                    return embed;
                 }
             ];
 
@@ -130,7 +148,7 @@ export class ProfileCommand {
 
             collector.on("collect", async i => {
                 if (i.user.id !== interaction.user.id) {
-                    await i.reply({ content: "You can't interact with this profile view!", ephemeral: true });
+                    await i.reply({ content: "You can't interact with this profile view!", flags: MessageFlags.Ephemeral });
                     return;
                 }
 

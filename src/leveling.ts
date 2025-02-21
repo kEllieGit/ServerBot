@@ -40,24 +40,25 @@ class LevelingSystem {
                 return null;
             }
 
-            const user = await prisma.user.findUnique({ 
-                where: { discordId: userId } 
+            const account = await prisma.account.findUnique({ 
+                where: { platform_platformId: { platform: "DISCORD", platformId: userId } },
+                include: { user: true }
             });
             
-            if (!user) {
+            if (!account || !account.user) {
                 return null;
             }
 
             const multiplier = this.getMultiplierForMember(member);
             const xpAmount = Math.floor(xp * multiplier);
 
-            let newXp = user.xp + xpAmount;
-            let newLevel = user.level;
+            let newXp = account.user.xp + xpAmount;
+            let newLevel = account.user.level;
             let leveledUp = false;
 
-            await prisma.user.update({
-                where: { discordId: userId },
-                data: { lastActiveAt: new Date() },
+            await prisma.account.update({
+                where: { platform_platformId: { platform: "DISCORD", platformId: userId } },
+                data: { user: { update: { lastActiveAt: new Date() } } },
             });
 
             const xpForNextLevel = this.getXpForNextLevel(newLevel);
@@ -67,17 +68,21 @@ class LevelingSystem {
                 leveledUp = true;
             }
 
-            const updatedUser = await prisma.user.update({
-                where: { discordId: userId },
+            const updatedUser = await prisma.account.update({
+                where: { platform_platformId: { platform: "DISCORD", platformId: userId } },
                 data: {
-                    xp: newXp,
-                    level: newLevel,
-                    ...(leveledUp && { balance: user.balance + this.LEVEL_UP_BONUS })
+                    user: {
+                        update: {
+                            xp: newXp,
+                            level: newLevel,
+                            ...(leveledUp && { balance: account.user.balance + this.LEVEL_UP_BONUS })
+                        }
+                    }
                 },
             });
 
             if (leveledUp && channel) {
-                await this.sendLevelUpMessage(user, newLevel, channel);
+                await this.sendLevelUpMessage(account.user, newLevel, channel);
             }
 
             return updatedUser;

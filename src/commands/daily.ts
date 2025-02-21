@@ -13,19 +13,21 @@ export class DailyCommand {
         const dailyMoney = 5;
         const dailyXP = 10;
 
-        const user = await prisma.user.findUnique({
-            where: { discordId: userId }
+        const account = await prisma.account.findUnique({
+            where: { platform_platformId: { platform: "DISCORD", platformId: userId } },
+            include: { user: true }
         });
 
-        if (!user) {
+        if (!account || !account.user) {
             await interaction.reply("User not found. Register first!");
             return;
         }
 
-        // Check if user has already claimed today
+        const user = account.user;
         const now = new Date();
         const lastClaimed = user.lastClaimedDaily ? new Date(user.lastClaimedDaily) : null;
 
+        // Check if user has already claimed today
         if (lastClaimed && now.toDateString() === lastClaimed.toDateString()) {
             await interaction.reply({
                 content: "You have already claimed your daily allowance today.",
@@ -34,8 +36,8 @@ export class DailyCommand {
             return;
         }
 
-        await prisma.user.update({
-            where: { discordId: userId },
+        const updatedUser = await prisma.user.update({
+            where: { id: user.id },
             data: {
                 balance: user.balance + dailyMoney,
                 lastClaimedDaily: now
@@ -43,16 +45,16 @@ export class DailyCommand {
         });
 
         const member = interaction.member as GuildMember;
-        const updatedUser = await Leveling.giveXP(user.discordId!, member, dailyXP, interaction.channel as TextChannel);
+        const leveledUser = await Leveling.giveXP(user.id, member, dailyXP, interaction.channel as TextChannel);
 
-        if (!updatedUser) {
+        if (!leveledUser) {
             await interaction.reply("An error occurred with receiving your daily allowance.");
             return;
         }
 
         const embed = new EmbedBuilder()
             .setTitle("Daily Allowance")
-            .setDescription(`You have received your daily rewards!`)
+            .setDescription("You have received your daily rewards!")
             .addFields(
                 { name: "Money Received", value: `${dailyMoney}$`, inline: true },
                 { name: "New Balance", value: `${updatedUser.balance}$`, inline: true },

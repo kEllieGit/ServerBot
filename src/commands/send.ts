@@ -57,11 +57,12 @@ export class SendCommand {
             return;
         }
 
-        const sender = await prisma.user.findUnique({
-            where: { discordId: interaction.user.id },
+        const sender = await prisma.account.findUnique({
+            where: { platform_platformId: { platform: "DISCORD", platformId: interaction.user.id } },
+            include: { user: true },
         });
 
-        if (!sender) {
+        if (!sender || !sender.user) {
             await interaction.reply({
                 content: "You don't have an account yet!",
                 flags: MessageFlags.Ephemeral,
@@ -69,11 +70,12 @@ export class SendCommand {
             return;
         }
 
-        const recipient = await prisma.user.findUnique({
-            where: { discordId: targetUser.id },
+        const recipient = await prisma.account.findUnique({
+            where: { platform_platformId: { platform: "DISCORD", platformId: targetUser.id } },
+            include: { user: true },
         });
 
-        if (!recipient) {
+        if (!recipient || !recipient.user) {
             await interaction.reply({
                 content: "The recipient doesn't have an account yet!",
                 flags: MessageFlags.Ephemeral,
@@ -81,7 +83,7 @@ export class SendCommand {
             return;
         }
 
-        if (sender.balance < amount) {
+        if (sender.user.balance < amount) {
             await interaction.reply({
                 content: "You do not have enough money to send.",
                 flags: MessageFlags.Ephemeral,
@@ -91,12 +93,12 @@ export class SendCommand {
         
         await prisma.$transaction([
             prisma.user.update({
-                where: { discordId: sender.discordId! },
-                data: { balance: sender.balance - amount },
+                where: { id: sender.user.id },
+                data: { balance: sender.user.balance - amount },
             }),
             prisma.user.update({
-                where: { discordId: recipient.discordId! },
-                data: { balance: recipient.balance + amount },
+                where: { id: recipient.user.id },
+                data: { balance: recipient.user.balance + amount },
             })
         ]);
 
@@ -105,8 +107,8 @@ export class SendCommand {
             .setTitle("💸 Money Sent 💸")
             .setDescription(`You sent ${amount}$ to ${targetUser.username}.`)
             .addFields(
-                { name: "Your New Balance", value: `${sender.balance - amount}$`, inline: true },
-                { name: "Recipient's New Balance", value: `${recipient.balance + amount}$`, inline: true },
+                { name: "Your New Balance", value: `${sender.user.balance - amount}$`, inline: true },
+                { name: "Recipient's New Balance", value: `${recipient.user.balance + amount}$`, inline: true },
             );
 
         await interaction.reply({ embeds: [embed] });

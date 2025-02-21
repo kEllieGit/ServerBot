@@ -28,11 +28,12 @@ export class DeleteDataCommand {
             return;
         }
 
-        const user = await prisma.user.findUnique({
-            where: { discordId: targetUser.id },
+        const account = await prisma.account.findUnique({
+            where: { platform_platformId: { platform: "DISCORD", platformId: targetUser.id } },
+            include: { user: true },
         });
 
-        if (!user) {
+        if (!account || !account.user) {
             await interaction.reply({
                 content: `No data found for user: ${targetUser}`,
                 flags: MessageFlags.Ephemeral,
@@ -41,7 +42,7 @@ export class DeleteDataCommand {
         }
 
         await prisma.user.delete({
-            where: { discordId: targetUser.id },
+            where: { id: targetUser.id },
         });
 
         await interaction.reply({

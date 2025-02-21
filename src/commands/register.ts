@@ -9,11 +9,12 @@ import prisma from "../database";
 export class RegisterCommand {
     static async execute(interaction: ChatInputCommandInteraction) {
         try {
-            const existingUser = await prisma.user.findUnique({
-                where: { discordId: interaction.user.id },
+            const existingAccount = await prisma.account.findUnique({
+                where: { platform_platformId: { platform: "DISCORD", platformId: interaction.user.id } },
+                include: { user: true },
             });
 
-            if (existingUser) {
+            if (existingAccount?.user) {
                 await interaction.reply({
                     content: "You already have a profile! Use /profile to view it.",
                     flags: MessageFlags.Ephemeral,
@@ -23,9 +24,14 @@ export class RegisterCommand {
 
             const user = await prisma.user.create({
                 data: {
-                    discordId: interaction.user.id,
                     username: interaction.user.username,
-                    platform: "discord",
+                    accounts: {
+                        create: {
+                            platform: "DISCORD",
+                            platformId: interaction.user.id,
+                            username: interaction.user.username
+                        }
+                    },
                     xp: 0,
                     level: 1,
                 },
