@@ -13,6 +13,10 @@ enum Role {
   ADMIN
 }
 
+enum Platform {
+  DISCORD
+}
+
 model Badge {
   id          String   @id @default(uuid())
   name        String   @unique
@@ -24,8 +28,8 @@ model Badge {
 }
 
 model UserBadge {
-  userId  String
-  badgeId String
+  userId    String
+  badgeId   String
   awardedAt DateTime @default(now())
 
   user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -35,21 +39,37 @@ model UserBadge {
 }
 
 model User {
-  id                 String         @id @default(uuid())
-  discordId          String?        @unique
-  username           String         @unique
-  platform           String
-  createdAt          DateTime       @default(now())
-  lastActiveAt       DateTime       @default(now())
-  lastClaimedDaily   DateTime?
-  deletedAt          DateTime?
-  role               Role           @default(USER)
-  balance            Float          @default(100)
-  level              Int            @default(1)
-  xp                 Float          @default(0)
-  badges             UserBadge[]
+  id                String         @id @default(uuid())
+  discordId         String?        // Temporary
+  username          String         @unique
+  platform          String?        // Temporary
+  createdAt         DateTime       @default(now())
+  lastActiveAt      DateTime       @default(now())
+  lastClaimedDaily  DateTime?
+  deletedAt         DateTime?
+  role              Role           @default(USER)
+  balance           Float          @default(100)
+  level             Int            @default(1)
+  xp                Float          @default(0)
+  badges            UserBadge[]
+  accounts          Account[]     
 
-  @@unique([username, platform])
+  // Temporary
   @@index([discordId])
   @@index([username])
+}
+
+model Account {
+  id          String    @id @default(uuid())
+  userId      String
+  platform    Platform
+  platformId  String
+  username    String
+  createdAt   DateTime  @default(now())
+  
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([platform, platformId])
+  @@unique([platform, username])
+  @@index([platformId])
 }
