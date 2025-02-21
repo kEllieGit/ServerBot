@@ -22,8 +22,8 @@ import prisma from "../database";
 })
 export class SendCommand {
     static async execute(interaction: ChatInputCommandInteraction) {
-        const amount = interaction.options.getInteger("amount");
         const targetUser = interaction.options.getUser("user");
+        const amount = interaction.options.getInteger("amount");
 
         if (!targetUser) {
             await interaction.reply({
