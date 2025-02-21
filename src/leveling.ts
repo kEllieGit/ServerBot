@@ -14,7 +14,7 @@ class LevelingSystem {
     private constructor() {
         this.roleMultipliers.set("1273709101938905225", 2);
         this.roleMultipliers.set("1264261544825323590", 1.5);
-        this.roleMultipliers.set("1341890748731228375", 1.5);
+        this.roleMultipliers.set("1341890748731228375", 2);
     }
 
     public getXpForNextLevel(level: number): number {
@@ -34,32 +34,28 @@ class LevelingSystem {
         return highestMultiplier;
     }
 
-    public async giveXP(userId: string, member: GuildMember, xp: number, channel?: TextChannel) {
+    public async giveXP(userId: string, xp: number, member?: GuildMember, channel?: TextChannel ) {
         try {
-            if (channel && this.IGNORED_CHANNELS.includes(channel.id)) {
-                return null;
-            }
-
-            const account = await prisma.account.findUnique({ 
-                where: { platform_platformId: { platform: "DISCORD", platformId: userId } },
-                include: { user: true }
+            const user = await prisma.user.findUnique({
+                where: { 
+                    id: userId
+                }
             });
             
-            if (!account || !account.user) {
+            if (!user) {
+                console.error(`User not found for ID ${userId}`);
                 return null;
             }
 
-            const multiplier = this.getMultiplierForMember(member);
-            const xpAmount = Math.floor(xp * multiplier);
+            let xpAmount = xp;
+            if (member) {
+                const multiplier = this.getMultiplierForMember(member);
+                xpAmount = Math.floor(xp * multiplier);
+            }
 
-            let newXp = account.user.xp + xpAmount;
-            let newLevel = account.user.level;
+            let newXp = user.xp + xpAmount;
+            let newLevel = user.level;
             let leveledUp = false;
-
-            await prisma.account.update({
-                where: { platform_platformId: { platform: "DISCORD", platformId: userId } },
-                data: { user: { update: { lastActiveAt: new Date() } } },
-            });
 
             const xpForNextLevel = this.getXpForNextLevel(newLevel);
             if (newXp >= xpForNextLevel && newLevel < this.MAX_LEVEL) {
@@ -68,21 +64,20 @@ class LevelingSystem {
                 leveledUp = true;
             }
 
-            const updatedUser = await prisma.account.update({
-                where: { platform_platformId: { platform: "DISCORD", platformId: userId } },
-                data: {
-                    user: {
-                        update: {
-                            xp: newXp,
-                            level: newLevel,
-                            ...(leveledUp && { balance: account.user.balance + this.LEVEL_UP_BONUS })
-                        }
-                    }
+            const updatedUser = await prisma.user.update({
+                where: { 
+                    id: userId
                 },
+                data: {
+                    lastActiveAt: new Date(),
+                    xp: newXp,
+                    level: newLevel,
+                    ...(leveledUp && { balance: user.balance + this.LEVEL_UP_BONUS })
+                }
             });
 
             if (leveledUp && channel) {
-                await this.sendLevelUpMessage(account.user, newLevel, channel);
+                await this.sendLevelUpMessage(updatedUser, newLevel, channel);
             }
 
             return updatedUser;

@@ -59,17 +59,28 @@ client.on(Events.MessageCreate, async (message) => {
     }
 
     try {
+        // This might not be very efficient...
+        const account = await prisma.account.findUnique({
+            where: {
+                platform_platformId: {
+                    platform: "DISCORD",
+                    platformId: message.author.id
+                }
+            },
+            include: { user: true }
+        });
+
+        if (!account || !account.user) {
+            return;
+        }
+
         const member = message.member as GuildMember;
-        const updatedUser = await Leveling.giveXP(
-            message.author.id,
-            member,
+        await Leveling.giveXP(
+            account.userId,
             Leveling.XP_PER_MESSAGE,
+            member,
             message.channel as TextChannel
         );
-        
-        if (!updatedUser) {
-            console.log(`User ${message.author.id} not found in database`);
-        }
     } catch (error) {
         console.error('Error processing message XP:', error);
     }
