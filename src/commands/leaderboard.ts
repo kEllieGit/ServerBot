@@ -24,16 +24,6 @@ export class LeaderboardCommand {
                 return;
             }
 
-            // Find the user's rank
-            const userRank = await prisma.user.count({
-                where: {
-                    level: {
-                        gt: (await prisma.user.findUnique({
-                            where: { id: interaction.user.id }
-                        }))?.level || 0
-                    }
-                }
-            });
             const medals = ["🥇", "🥈", "🥉"];
             
             let leaderboard = topUsers
@@ -51,12 +41,19 @@ export class LeaderboardCommand {
                 include: { user: true }
             });
     
-            console.log(userData);
-            if (userData && !topUsers.some(user => user.id === userData.id)) {
+            if (userData && !topUsers.some(user => user.id === userData.user.id)) {
+                const userRank = await prisma.user.count({
+                    where: {
+                        level: {
+                            gt: userData.user.level
+                        }
+                    }
+                });
+
                 const actualRank = userRank + 1;
                 leaderboard += "\n\nYour Rank\n" +
                             `\`#${actualRank.toString()}\` ` +
-                            `**${userData.username}** - Level ${userData.user.level} ` +
+                            `**${userData.user.username}** - Level ${userData.user.level} ` +
                             `(${userData.user.xp}/${userData.user.level * 100} XP)`;
             }
 
