@@ -24,14 +24,51 @@ export class LeaderboardCommand {
                 return;
             }
 
-            const leaderboard = topUsers
-                .map((user, index) => `${index + 1}. **${user.username}** - Level: ${user.level}`)
+            // Find the user's rank
+            const userRank = await prisma.user.count({
+                where: {
+                    level: {
+                        gt: (await prisma.user.findUnique({
+                            where: { id: interaction.user.id }
+                        }))?.level || 0
+                    }
+                }
+            });
+            const medals = ["🥇", "🥈", "🥉"];
+            
+            let leaderboard = topUsers
+                .map((user, index) => {
+                    const medal = index < 3 ? `${medals[index]} ` : "   ";
+                    const rank = `\`#${(index + 1).toString()}\``;
+                    const levelInfo = `Level ${user.level}`;
+                    
+                    return `${medal}${rank} **${user.username}** - ${levelInfo}`;
+                })
                 .join("\n");
 
+            const userData = await prisma.account.findUnique({
+                where: { platform_platformId: { platform: "DISCORD", platformId: interaction.user.id } },
+                include: { user: true }
+            });
+    
+            console.log(userData);
+            if (userData && !topUsers.some(user => user.id === userData.id)) {
+                const actualRank = userRank + 1;
+                leaderboard += "\n\nYour Rank\n" +
+                            `\`#${actualRank.toString()}\` ` +
+                            `**${userData.username}** - Level ${userData.user.level} ` +
+                            `(${userData.user.xp}/${userData.user.level * 100} XP)`;
+            }
+
+            const totalUsers = await prisma.user.count();
+            
             const leaderboardEmbed = new EmbedBuilder()
                 .setColor("#FFD700")
-                .setTitle("🏆 Leaderboard 🏆")
+                .setTitle("🏆 Level Leaderboard")
                 .setDescription(leaderboard)
+                .setFooter({ 
+                    text: `Total Users: ${totalUsers} • Updated ${new Date().toLocaleString()}`
+                })
                 .setTimestamp();
 
             await interaction.reply({ embeds: [leaderboardEmbed] });
