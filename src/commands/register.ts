@@ -42,6 +42,7 @@ export class RegisterCommand {
                 const member = await guild.members.fetch(interaction.user.id);
                 const roleId = "1341103896168235019";
                 const role = guild.roles.cache.get(roleId);
+                
                 if (role) {
                     await member.roles.add(role);
                 }

@@ -92,7 +92,7 @@ class LevelingSystem {
             await channel.send({
                 embeds: [{
                     color: 0x00ff00,
-                    title: "🎉 Level Up! 🎉",
+                    title: "🎉 Level Up",
                     description: `Congratulations ${user.username}, you have reached level ${newLevel}!`,
                     timestamp: new Date().toISOString(),
                 }],

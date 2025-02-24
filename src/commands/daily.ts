@@ -63,7 +63,7 @@ export class DailyCommand {
 
             if (!leveled) {
                 await interaction.reply({
-                    content: `An error occurred while gaining your daily XP. Please try again later.`,
+                    content: "An error occurred while gaining your daily XP. Please try again later.",
                     flags: MessageFlags.Ephemeral
                 });
                 return;
@@ -74,10 +74,7 @@ export class DailyCommand {
                 .setDescription("You have received your daily rewards!")
                 .addFields(
                     { name: "Money Received", value: `${dailyMoney}$`, inline: true },
-                    { name: "New Balance", value: `${updatedUser.balance}$`, inline: true },
-                    { name: "\u200B", value: "\u200B" },
                     { name: "XP Received", value: `${dailyXP}XP`, inline: true },
-                    { name: "Total XP", value: `${leveled.xp}XP`, inline: true }
                 )
                 .setColor(Colors.Green)
                 .setTimestamp();
