@@ -18,7 +18,7 @@ interface ResponseMessage extends WebsocketMessage {
 }
 
 const messageHandlers: Record<string, (data: WebsocketMessage) => Promise<any>> = {
-	"getUser": async (data) => {
+	"getUser_steam": async (data) => {
 		try {
 			const userId = data.content;
 			const user = await prisma.user.findUnique({
