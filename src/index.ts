@@ -12,10 +12,11 @@ import dotenv from "dotenv";
 import prisma from "./database";
 import Leveling from "./leveling";
 import Logging from "./logging";
+import "./services/ws";
 
 dotenv.config();
 
-const client = new Client({
+export const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
         GatewayIntentBits.GuildMessages,
@@ -24,7 +25,7 @@ const client = new Client({
     ],
 });
 
-const GUILD_ID = "811256944953262102";
+const GUILD_ID = "1341508196589633636";
 
 client.once(Events.ClientReady, async (client) => {
     console.log(`Ready! Logged in as ${client.user.tag}`);

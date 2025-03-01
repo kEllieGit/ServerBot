@@ -1,7 +1,7 @@
 import { TextChannel } from "discord.js";
 
 const Logging = {
-    LOG_CHANNEL_ID: "1341168478861922434",
+    LOG_CHANNEL_ID: "1341508197491540040",
 
     async log(guild: any, message: string) {
         console.log(message);
