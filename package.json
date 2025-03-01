@@ -15,10 +15,12 @@
   "dependencies": {
     "@prisma/client": "^6.3.1",
     "discord.js": "^14.18.0",
-    "dotenv": "^16.4.7"
+    "dotenv": "^16.4.7",
+    "ws": "^8.18.1"
   },
   "devDependencies": {
     "@types/node": "^22.13.4",
+    "@types/ws": "^8.5.14",
     "nodemon": "^3.1.9",
     "prisma": "^6.3.1",
     "ts-node": "^10.9.2",
