@@ -1,5 +1,6 @@
 import { TextChannel, GuildMember } from "discord.js";
 import prisma from "./database";
+import Logging from "./logging"
 
 class LevelingSystem {
     public static instance: LevelingSystem = new LevelingSystem();
@@ -76,8 +77,12 @@ class LevelingSystem {
                 }
             });
 
-            if (leveledUp && channel) {
-                await this.sendLevelUpMessage(updatedUser, newLevel, channel);
+            if (leveledUp) {
+                Logging.log(`${user.username} leveled up to level ${newLevel}!`);
+
+                if (channel) {
+                    await this.sendLevelUpMessage(updatedUser, newLevel, channel);
+                }
             }
 
             return updatedUser;
@@ -103,9 +108,8 @@ class LevelingSystem {
             let newLevel = user.level;
             let leveledUp = false;
 
-            const xpForNextLevel = this.getXpForNextLevel(newLevel);
-            if (newXP >= xpForNextLevel && newLevel < this.MAX_LEVEL) {
-                newXP = 0;
+            if (newXP >= this.getXpForNextLevel(newLevel) && newLevel < this.MAX_LEVEL) {
+                newXP = newXP - this.getXpForNextLevel(newLevel);
                 newLevel++;
                 leveledUp = true;
             }
