@@ -87,6 +87,48 @@ class LevelingSystem {
         }
     }
 
+    public async setXP(userId: string, newXP: number) {
+        try {
+            const user = await prisma.user.findUnique({
+                where: { 
+                    id: userId
+                }
+            });
+
+            if (!user) {
+                console.error(`User not found for ID ${userId}`);
+                return null;
+            }
+
+            let newLevel = user.level;
+            let leveledUp = false;
+
+            const xpForNextLevel = this.getXpForNextLevel(newLevel);
+            if (newXP >= xpForNextLevel && newLevel < this.MAX_LEVEL) {
+                newXP = 0;
+                newLevel++;
+                leveledUp = true;
+            }
+
+            const updatedUser = await prisma.user.update({
+                where: { 
+                    id: userId
+                },
+                data: {
+                    lastActiveAt: new Date(),
+                    xp: newXP,
+                    level: newLevel,
+                    ...(leveledUp && { balance: user.balance + this.LEVEL_UP_BONUS })
+                }
+            });
+
+            return updatedUser;
+        } catch (error) {
+            console.error('Error while setting XP:', error);
+            return null;
+        }
+    }
+
     private async sendLevelUpMessage(user: any, newLevel: number, channel: TextChannel) {
         try {
             await channel.send({
