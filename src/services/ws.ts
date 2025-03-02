@@ -1,11 +1,9 @@
 import { WebSocketServer } from "ws";
 import prisma from "../database";
 import Logging from "../logging";
-import { client } from "../index";
 import Leveling from "../leveling";
 
 const wss = new WebSocketServer({ port: 8080 });
-const GUILD_ID = "1341508196589633636";
 
 interface WebsocketMessage {
 	type: string;
@@ -50,7 +48,7 @@ const messageHandlers: Record<string, (data: WebsocketMessage) => Promise<any>> 
 		// Handle registration.
 		console.log(data.content);
 	},
-	"setXP": async (data) => {
+	"giveXP": async (data) => {
 		try {
 			if (!data.content) {
 				return;
@@ -58,7 +56,7 @@ const messageHandlers: Record<string, (data: WebsocketMessage) => Promise<any>> 
 
 			const [xpAmount, userId] = data.content.split(" ");
 			console.log(`XP Amount: ${xpAmount}, User ID: ${userId}`);
-			const t = Leveling.setXP(userId, Number(xpAmount));
+			const t = Leveling.giveXP(userId, Number(xpAmount));
 
 			if (!t) {
 				return {
@@ -81,12 +79,11 @@ const messageHandlers: Record<string, (data: WebsocketMessage) => Promise<any>> 
 };
 
 wss.on("connection", (ws) => {
-	Logging.log(client.guilds.cache.get(GUILD_ID), "🟢 Established websocket connection.");
+	Logging.log("🟢 Established websocket connection.");
 
 	ws.on("message", async (message: string) => {
 		try {
 			const data = JSON.parse(message) as WebsocketMessage;
-			Logging.log(client.guilds.cache.get(GUILD_ID), `Received message type: ${data.type}`);
 		
 			if (data.type && messageHandlers[data.type]) {
 				const result = await messageHandlers[data.type](data);
@@ -99,10 +96,10 @@ wss.on("connection", (ws) => {
 				};
 			
 				ws.send(JSON.stringify(response));
-				Logging.log(client.guilds.cache.get(GUILD_ID), `Sent response for request ${data.correlationId}`);
+				Logging.log(`Sent response for request ${data.correlationId}`);
 			}
 		} else {
-			Logging.log(client.guilds.cache.get(GUILD_ID), `Received unhandled message type: ${data.type}`);
+			Logging.log(`Received unhandled message type: ${data.type}`);
 			
 			if (data.correlationId) {
 				const response: ResponseMessage = {
@@ -116,15 +113,15 @@ wss.on("connection", (ws) => {
 			}
 		}
 		} catch (error: any) {
-			Logging.log(client.guilds.cache.get(GUILD_ID), `Error processing message: ${error.message}`);
+			Logging.log(`Error processing message: ${error.message}`);
 		}
 	});
 
 	ws.on("close", () => {
-		Logging.log(client.guilds.cache.get(GUILD_ID), "🔴 WebSocket connection closed for client.");
+		Logging.log("🔴 WebSocket connection closed for client.");
 	});
 	  
 	ws.on("error", (error) => {
-		Logging.log(client.guilds.cache.get(GUILD_ID), `🔴 WebSocket connection ran into an error: ${error.message}`);
+		Logging.log(`🔴 WebSocket connection ran into an error: ${error.message}`);
 	});
 });
