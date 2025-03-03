@@ -55,10 +55,9 @@ const messageHandlers: Record<string, (data: WebsocketMessage) => Promise<any>> 
 			}
 
 			const [xpAmount, userId] = data.content.split(" ");
-			console.log(`XP Amount: ${xpAmount}, User ID: ${userId}`);
-			const t = Leveling.giveXP(userId, Number(xpAmount));
+			const updatedUser = Leveling.giveXP(userId, Number(xpAmount));
 
-			if (!t) {
+			if (!updatedUser) {
 				return {
 					success: false,
 					content: `Could not find user by ID ${userId}`
