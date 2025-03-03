@@ -48,10 +48,26 @@ const messageHandlers: Record<string, (data: WebsocketMessage) => Promise<any>> 
 		// Handle registration.
 		console.log(data.content);
 	},
+	"linkCode_steam": async (data) => {
+		if (!data.content) {
+			return {
+				success: false,
+				content: `Malformed content received.`
+			};
+		}
+
+		const [code, steamId] = data.content.split(" ");
+
+		// Handle code verification.
+		console.log(`Code: ${code} steamId: ${steamId}`);
+	},
 	"giveXP": async (data) => {
 		try {
 			if (!data.content) {
-				return;
+				return {
+					success: false,
+					content: `Malformed content received.`
+				};
 			}
 
 			const [xpAmount, userId] = data.content.split(" ");
@@ -95,7 +111,7 @@ wss.on("connection", (ws) => {
 				};
 			
 				ws.send(JSON.stringify(response));
-				Logging.log(`Sent response for request ${data.correlationId}`);
+				Logging.log(`Sent response for request ${data.correlationId} | Type: ${data.type}`);
 			}
 		} else {
 			Logging.log(`Received unhandled message type: ${data.type}`);
