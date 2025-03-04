@@ -83,7 +83,7 @@ const messageHandlers: Record<string, (data: WebsocketMessage) => Promise<any>> 
 				};
 			}
 
-			const [xpAmount, userId] = data.content.split(" ");
+			const [userId, xpAmount] = data.content.split(" ");
 			const updatedUser = Leveling.giveXP(userId, Number(xpAmount));
 
 			if (!updatedUser) {
