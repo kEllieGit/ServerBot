@@ -44,10 +44,6 @@ const messageHandlers: Record<string, (data: WebsocketMessage) => Promise<any>> 
 			};
 		}
 	},
-	"registerAccount_steam": async (data) => {
-		// Handle registration.
-		console.log(data.content);
-	},
 	"linkCode_steam": async (data) => {
 		if (!data.content) {
 			return {
