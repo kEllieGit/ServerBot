@@ -107,7 +107,7 @@ const messageHandlers: Record<string, (data: WebsocketMessage) => Promise<any>> 
 };
 
 wss.on("connection", (ws) => {
-	Logging.log("🟢 Established websocket connection.");
+	Logging.log("🟢 Established WebSocket connection.");
 
 	ws.on("message", async (message: string) => {
 		try {
@@ -146,7 +146,7 @@ wss.on("connection", (ws) => {
 	});
 
 	ws.on("close", () => {
-		Logging.log("🔴 WebSocket connection closed for client.");
+		Logging.log("🔴 Closed WebSocket connection.");
 	});
 	  
 	ws.on("error", (error) => {
