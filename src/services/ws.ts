@@ -19,14 +19,31 @@ interface ResponseMessage extends WebsocketMessage {
 const messageHandlers: Record<string, (data: WebsocketMessage) => Promise<any>> = {
 	"getUser_steam": async (data) => {
 		try {
-			const steamId = data.content as string;
+			if (!data.content) {
+				return {
+					success: false,
+					content: `Malformed content received.`
+				};
+			}
+
+			const [steamId, username] = data.content.split(" ");
 			const account = await prisma.account.findUnique({
 				where: { platform_platformId: { platform: "STEAM", platformId: steamId } },
 				include: { user: true }
 			});
 
+			console.log(`SteamID: ${steamId} Username: ${username}`)
 			if (!account || !account.user)
 			{
+
+				//const newAccount = await prisma.account.create({
+				//	data: {
+				//		platform: "STEAM",
+				//		platformId: steamId,
+				//		username: username
+				//	}
+				//});
+
 				return {
 					success: false,
 					error: `No user found.`
@@ -52,10 +69,10 @@ const messageHandlers: Record<string, (data: WebsocketMessage) => Promise<any>> 
 			};
 		}
 
-		const [code, steamId] = data.content.split(" ");
+		const [steamId, code] = data.content.split(" ");
 
 		// Handle code verification.
-		console.log(`Code: ${code} steamId: ${steamId}`);
+		console.log(`SteamID: ${steamId} Code: ${code}`);
 	},
 	"giveXP": async (data) => {
 		try {
