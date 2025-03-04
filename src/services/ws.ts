@@ -19,14 +19,31 @@ interface ResponseMessage extends WebsocketMessage {
 const messageHandlers: Record<string, (data: WebsocketMessage) => Promise<any>> = {
 	"getUser_steam": async (data) => {
 		try {
-			const steamId = data.content as string;
+			if (!data.content) {
+				return {
+					success: false,
+					content: `Malformed content received.`
+				};
+			}
+
+			const [steamId, username] = data.content.split(" ");
 			const account = await prisma.account.findUnique({
 				where: { platform_platformId: { platform: "STEAM", platformId: steamId } },
 				include: { user: true }
 			});
 
+			console.log(`SteamID: ${steamId} Username: ${username}`)
 			if (!account || !account.user)
 			{
+
+				//const newAccount = await prisma.account.create({
+				//	data: {
+				//		platform: "STEAM",
+				//		platformId: steamId,
+				//		username: username
+				//	}
+				//});
+
 				return {
 					success: false,
 					error: `No user found.`
@@ -44,17 +61,29 @@ const messageHandlers: Record<string, (data: WebsocketMessage) => Promise<any>> 
 			};
 		}
 	},
-	"registerAccount_steam": async (data) => {
-		// Handle registration.
-		console.log(data.content);
+	"linkCode_steam": async (data) => {
+		if (!data.content) {
+			return {
+				success: false,
+				content: `Malformed content received.`
+			};
+		}
+
+		const [steamId, code] = data.content.split(" ");
+
+		// Handle code verification.
+		console.log(`SteamID: ${steamId} Code: ${code}`);
 	},
 	"giveXP": async (data) => {
 		try {
 			if (!data.content) {
-				return;
+				return {
+					success: false,
+					content: `Malformed content received.`
+				};
 			}
 
-			const [xpAmount, userId] = data.content.split(" ");
+			const [userId, xpAmount] = data.content.split(" ");
 			const updatedUser = Leveling.giveXP(userId, Number(xpAmount));
 
 			if (!updatedUser) {
@@ -78,7 +107,7 @@ const messageHandlers: Record<string, (data: WebsocketMessage) => Promise<any>> 
 };
 
 wss.on("connection", (ws) => {
-	Logging.log("🟢 Established websocket connection.");
+	Logging.log("🟢 Established WebSocket connection.");
 
 	ws.on("message", async (message: string) => {
 		try {
@@ -95,7 +124,7 @@ wss.on("connection", (ws) => {
 				};
 			
 				ws.send(JSON.stringify(response));
-				Logging.log(`Sent response for request ${data.correlationId}`);
+				Logging.log(`Sent response for request ${data.correlationId} | Type: ${data.type}`);
 			}
 		} else {
 			Logging.log(`Received unhandled message type: ${data.type}`);
@@ -117,7 +146,7 @@ wss.on("connection", (ws) => {
 	});
 
 	ws.on("close", () => {
-		Logging.log("🔴 WebSocket connection closed for client.");
+		Logging.log("🔴 Closed WebSocket connection.");
 	});
 	  
 	ws.on("error", (error) => {
