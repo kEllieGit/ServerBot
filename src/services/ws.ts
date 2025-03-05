@@ -2,7 +2,7 @@ import { WebSocketServer } from "ws";
 import prisma from "../database";
 import Logging from "../logging";
 import Leveling from "../leveling";
-import { codeMap, deleteCode } from "../codeStorage";
+import { CodeStorage } from "../codeStorage";
 import { mergeUsers } from "../mergeUsers";
 import { client } from "../index"
 const wss = new WebSocketServer({ port: 8080 });
@@ -74,14 +74,10 @@ const messageHandlers: Record<string, (data: WebsocketMessage) => Promise<any>> 
 
 		const [steamId, code] = data.content.split(" ");
 		let discordId = undefined;
-		
-		codeMap.forEach((val, key ) => {
-			if(code == val){
-				discordId = key;
-			}
-		});
 
-		if( discordId === undefined) {
+		discordId = CodeStorage.getUser(code);
+
+		if (discordId === undefined) {
 			console.log("Invalid code entered!");
 			return
 		}
@@ -111,11 +107,14 @@ const messageHandlers: Record<string, (data: WebsocketMessage) => Promise<any>> 
 			return;
 		}
 
-		const response = await mergeUsers(result[0].id, result[1].id);
+		const result_steam = result[0];
+		const result_discord = result[1];
+
+		const response = await mergeUsers(result_steam.id, result_discord.id);
 		console.log(response.message);
-		if (response.success === true) {
-			deleteCode(discordId);
-			const discordUserId = result[1].accounts.find(account => account.platform === 'DISCORD')?.platformId;
+		if (response.success) {
+			CodeStorage.deleteCode(discordId);
+			const discordUserId = result_discord.accounts.find(account => account.platform === 'DISCORD')?.platformId;
 			if (discordUserId) {
 				try {
 					const discordUser = await client.users.fetch(discordUserId);

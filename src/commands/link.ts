@@ -1,8 +1,6 @@
 import { ChatInputCommandInteraction, Colors, EmbedBuilder, MessageFlags } from "discord.js";
 import { Command } from "../commandHandler";
-import { codeMap, storeCode, getCode, deleteCode } from "../codeStorage";
-import prisma from "../database"; //temp
-
+import { CodeStorage } from "../codeStorage";
 
 @Command({
     name: "link",
@@ -10,25 +8,25 @@ import prisma from "../database"; //temp
 })
 export class LinkCommand {
     static async execute(interaction: ChatInputCommandInteraction) {
-        if (getCode(interaction.user.id)) {
+        if (CodeStorage.getCode(interaction.user.id)) {
             const embed = new EmbedBuilder()
-            .setTitle("Error")
-            .setDescription("You still have an active code!")
-            .setColor(Colors.Red)
-            .setTimestamp();
-            
+                .setTitle("Error")
+                .setDescription("You still have an active code!")
+                .setColor(Colors.Red)
+                .setTimestamp();
+
             await interaction.reply({
                 embeds: [embed],
                 flags: MessageFlags.Ephemeral
             });
             return;
         }
-        
+
         const codeLifetime = 300; // Code lifetime in seconds (e.g., 300 seconds = 5 minutes)
         const genCode = generateRandomString();
         const futureTimestamp = Math.floor(Date.now() / 1000) + codeLifetime;
 
-        storeCode(interaction.user.id, genCode);
+        CodeStorage.storeCode(interaction.user.id, genCode);
 
         const embed = new EmbedBuilder()
             .setTitle("Link")
@@ -46,7 +44,7 @@ export class LinkCommand {
         });
 
         setTimeout(async () => {
-            deleteCode(interaction.user.id);
+            CodeStorage.deleteCode(interaction.user.id);
 
             try {
                 const expirationEmbed = new EmbedBuilder()
@@ -78,9 +76,10 @@ function generateRandomString(length: number = 10): string {
             result += characters[randomIndex];
         }
 
-        if (!codeMap.has(result)) {
+        if (!CodeStorage.hasCode(result)) {
             codeExists = false;
         }
+
     }
 
     return result;
