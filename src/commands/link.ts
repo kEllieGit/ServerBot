@@ -1,6 +1,7 @@
 import { ChatInputCommandInteraction, Colors, EmbedBuilder, MessageFlags } from "discord.js";
 import { Command } from "../commandHandler";
 import { codeMap, storeCode, getCode, deleteCode } from "../codeStorage";
+import prisma from "../database"; //temp
 
 
 @Command({
@@ -23,7 +24,7 @@ export class LinkCommand {
             return;
         }
         
-        const codeLifetime = 10; // Code lifetime in seconds (e.g., 300 seconds = 5 minutes)
+        const codeLifetime = 30; // Code lifetime in seconds (e.g., 300 seconds = 5 minutes)
         const genCode = generateRandomString();
         const futureTimestamp = Math.floor(Date.now() / 1000) + codeLifetime;
 
