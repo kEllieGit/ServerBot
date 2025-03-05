@@ -4,7 +4,8 @@ import { CodeStorage } from "../codeStorage";
 
 @Command({
     name: "link",
-    description: "Link your discord account to your ingame account!"
+    description: "Link your discord account to your ingame account!",
+    registrationRequired: true
 })
 export class LinkCommand {
     static async execute(interaction: ChatInputCommandInteraction) {
