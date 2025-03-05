@@ -52,6 +52,9 @@ const messageHandlers: Record<string, (data: WebsocketMessage) => Promise<any>> 
 					},
 				});
 			}
+			else {
+				user = account.user
+			}
 
 			return {
 				success: true,
