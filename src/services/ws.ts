@@ -36,7 +36,6 @@ const messageHandlers: Record<string, (data: WebsocketMessage) => Promise<any>> 
 			let user = undefined;
 
 			if (!account || !account.user) {
-
 				user = await prisma.user.create({
 					data: {
 						username: username,
@@ -80,9 +79,9 @@ const messageHandlers: Record<string, (data: WebsocketMessage) => Promise<any>> 
 
 		discordId = CodeStorage.getUser(code);
 
-		if (discordId === undefined) {
+		if (!discordId) {
 			console.log("Invalid code entered!");
-			return
+			return;
 		}
 
 		const result = await prisma.user.findMany({
@@ -179,11 +178,12 @@ wss.on("connection", (ws) => {
 						...result
 					};
 
-					ws.send(JSON.stringify(response));
-					Logging.log(`Sent response for request ${data.correlationId} | Type: ${data.type}`);
+					const json = JSON.stringify(response);
+					ws.send(json);
+					Logging.log(`✅ Sent response for request ${data.correlationId} | Type: ${data.type}`);
 				}
 			} else {
-				Logging.log(`Received unhandled message type: ${data.type}`);
+				Logging.log(`❌ Received unhandled message type: ${data.type}`);
 
 				if (data.correlationId) {
 					const response: ResponseMessage = {
@@ -193,11 +193,12 @@ wss.on("connection", (ws) => {
 						error: `Unknown message type: ${data.type}`
 					};
 
-					ws.send(JSON.stringify(response));
+					const json = JSON.stringify(response);
+					ws.send(json);
 				}
 			}
 		} catch (error: any) {
-			Logging.log(`Error processing message: ${error.message}`);
+			Logging.log(`❌ Error processing message: ${error.message}`);
 		}
 	});
 
