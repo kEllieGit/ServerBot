@@ -24,7 +24,7 @@ export class LinkCommand {
             return;
         }
         
-        const codeLifetime = 30; // Code lifetime in seconds (e.g., 300 seconds = 5 minutes)
+        const codeLifetime = 300; // Code lifetime in seconds (e.g., 300 seconds = 5 minutes)
         const genCode = generateRandomString();
         const futureTimestamp = Math.floor(Date.now() / 1000) + codeLifetime;
 
