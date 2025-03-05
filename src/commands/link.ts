@@ -30,7 +30,7 @@ export class LinkCommand {
 
         const embed = new EmbedBuilder()
             .setTitle("Link")
-            .setDescription("Paste the following in the ingame text chat!")
+            .setDescription("Paste the following code in-game!")
             .addFields(
                 { name: "Code:", value: `\`\`${genCode}\`\``, inline: true },
                 { name: "Expires in:", value: `<t:${futureTimestamp}:R>`, inline: true }
