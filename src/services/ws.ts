@@ -78,10 +78,12 @@ const messageHandlers: Record<string, (data: WebsocketMessage) => Promise<any>> 
 		let discordId = undefined;
 
 		discordId = CodeStorage.getUser(code);
-
 		if (!discordId) {
 			console.log("Invalid code entered!");
-			return;
+			return {
+				success: false,
+				content: `Invalid code entered.`
+			};
 		}
 
 		const result = await prisma.user.findMany({
@@ -106,14 +108,16 @@ const messageHandlers: Record<string, (data: WebsocketMessage) => Promise<any>> 
 
 		if (result.length !== 2) {
 			console.error(`Cannot merge when there are more or less than 2 users in the database. Found ${result.length} user(s).`);
-			return;
+			return {
+				success: false,
+				content: `Cannot merge when there are more or less than 2 users in the database. Found ${result.length} user(s).`
+			};
 		}
 
 		const result_steam = result[0];
 		const result_discord = result[1];
 
 		const response = await mergeUsers(result_steam.id, result_discord.id);
-		console.log(response.message);
 		if (response.success) {
 			CodeStorage.deleteCode(discordId);
 			const discordUserId = result_discord.accounts.find(account => account.platform === 'DISCORD')?.platformId;
@@ -128,6 +132,11 @@ const messageHandlers: Record<string, (data: WebsocketMessage) => Promise<any>> 
 				}
 			}
 		}
+
+		return {
+			success: response.success,
+			content: response.message
+		};
 	},
 	"giveXP": async (data) => {
 		try {
