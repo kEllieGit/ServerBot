@@ -25,7 +25,7 @@ export const client = new Client({
     ],
 });
 
-const GUILD_ID = "1341508196589633636";
+const GUILD_ID = "811256944953262102";
 
 client.once(Events.ClientReady, async (client) => {
     console.log(`Ready! Logged in as ${client.user.tag}`);
