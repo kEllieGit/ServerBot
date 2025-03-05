@@ -5,7 +5,7 @@ import Leveling from "../leveling";
 import { CodeStorage } from "../codeStorage";
 import { mergeUsers } from "../mergeUsers";
 import { client } from "../index"
-const wss = new WebSocketServer({ port: 8080 });
+const wss = new WebSocketServer({ port: 9443 });
 
 interface WebsocketMessage {
 	type: string;
