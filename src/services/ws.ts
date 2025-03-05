@@ -2,7 +2,9 @@ import { WebSocketServer } from "ws";
 import prisma from "../database";
 import Logging from "../logging";
 import Leveling from "../leveling";
-
+import { CodeStorage } from "../codeStorage";
+import { mergeUsers } from "../mergeUsers";
+import { client } from "../index"
 const wss = new WebSocketServer({ port: 8080 });
 
 interface WebsocketMessage {
@@ -31,28 +33,29 @@ const messageHandlers: Record<string, (data: WebsocketMessage) => Promise<any>> 
 				where: { platform_platformId: { platform: "STEAM", platformId: steamId } },
 				include: { user: true }
 			});
+			let user = undefined;
 
-			console.log(`SteamID: ${steamId} Username: ${username}`)
-			if (!account || !account.user)
-			{
+			if (!account || !account.user) {
 
-				//const newAccount = await prisma.account.create({
-				//	data: {
-				//		platform: "STEAM",
-				//		platformId: steamId,
-				//		username: username
-				//	}
-				//});
-
-				return {
-					success: false,
-					error: `No user found.`
-				};
+				user = await prisma.user.create({
+					data: {
+						username: username,
+						accounts: {
+							create: {
+								platform: "STEAM",
+								platformId: steamId,
+								username: username
+							}
+						},
+						xp: 0,
+						level: 1,
+					},
+				});
 			}
-		
+
 			return {
 				success: true,
-				content: JSON.stringify(account.user)
+				content: JSON.stringify(user)
 			};
 		} catch (error) {
 			return {
@@ -70,9 +73,59 @@ const messageHandlers: Record<string, (data: WebsocketMessage) => Promise<any>> 
 		}
 
 		const [steamId, code] = data.content.split(" ");
+		let discordId = undefined;
 
-		// Handle code verification.
-		console.log(`SteamID: ${steamId} Code: ${code}`);
+		discordId = CodeStorage.getUser(code);
+
+		if (discordId === undefined) {
+			console.log("Invalid code entered!");
+			return
+		}
+
+		const result = await prisma.user.findMany({
+			where: {
+				accounts: {
+					some: {
+						OR: [
+							{ platform: "STEAM", platformId: steamId },
+							{ platform: "DISCORD", platformId: discordId },
+						],
+					},
+				},
+			},
+			include: {
+				accounts: {
+					orderBy: {
+						platform: 'asc',  // Ensures Steam comes before Discord
+					},
+				},
+			},
+		});
+
+		if (result.length !== 2) {
+			console.error(`Cannot merge when there are more or less than 2 users in the database. Found ${result.length} user(s).`);
+			return;
+		}
+
+		const result_steam = result[0];
+		const result_discord = result[1];
+
+		const response = await mergeUsers(result_steam.id, result_discord.id);
+		console.log(response.message);
+		if (response.success) {
+			CodeStorage.deleteCode(discordId);
+			const discordUserId = result_discord.accounts.find(account => account.platform === 'DISCORD')?.platformId;
+			if (discordUserId) {
+				try {
+					const discordUser = await client.users.fetch(discordUserId);
+					discordUser.send({
+						content: `🎉 Your Steam and Discord accounts have been successfully linked!`
+					});
+				} catch (error) {
+					console.error("Error sending DM confirmation message:", error);
+				}
+			}
+		}
 	},
 	"giveXP": async (data) => {
 		try {
@@ -112,34 +165,34 @@ wss.on("connection", (ws) => {
 	ws.on("message", async (message: string) => {
 		try {
 			const data = JSON.parse(message) as WebsocketMessage;
-		
+
 			if (data.type && messageHandlers[data.type]) {
 				const result = await messageHandlers[data.type](data);
-			
+
 				if (data.correlationId) {
 					const response: ResponseMessage = {
 						type: `${data.type}_response`,
 						correlationId: data.correlationId,
 						...result
-				};
-			
-				ws.send(JSON.stringify(response));
-				Logging.log(`Sent response for request ${data.correlationId} | Type: ${data.type}`);
+					};
+
+					ws.send(JSON.stringify(response));
+					Logging.log(`Sent response for request ${data.correlationId} | Type: ${data.type}`);
+				}
+			} else {
+				Logging.log(`Received unhandled message type: ${data.type}`);
+
+				if (data.correlationId) {
+					const response: ResponseMessage = {
+						type: "error",
+						correlationId: data.correlationId,
+						success: false,
+						error: `Unknown message type: ${data.type}`
+					};
+
+					ws.send(JSON.stringify(response));
+				}
 			}
-		} else {
-			Logging.log(`Received unhandled message type: ${data.type}`);
-			
-			if (data.correlationId) {
-				const response: ResponseMessage = {
-					type: "error",
-					correlationId: data.correlationId,
-					success: false,
-					error: `Unknown message type: ${data.type}`
-				};
-			
-				ws.send(JSON.stringify(response));
-			}
-		}
 		} catch (error: any) {
 			Logging.log(`Error processing message: ${error.message}`);
 		}
@@ -148,7 +201,7 @@ wss.on("connection", (ws) => {
 	ws.on("close", () => {
 		Logging.log("🔴 Closed WebSocket connection.");
 	});
-	  
+
 	ws.on("error", (error) => {
 		Logging.log(`🔴 WebSocket connection ran into an error: ${error.message}`);
 	});
