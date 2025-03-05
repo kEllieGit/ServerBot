@@ -176,6 +176,7 @@ wss.on("connection", (ws) => {
 	ws.on("message", async (message: string) => {
 		try {
 			const data = JSON.parse(message) as WebsocketMessage;
+			Logging.log(`✉️ Received Message Type: ${data.type} | Content: ${data.content}`);
 
 			if (data.type && messageHandlers[data.type]) {
 				const result = await messageHandlers[data.type](data);
