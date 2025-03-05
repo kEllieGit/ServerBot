@@ -24,6 +24,8 @@ services:
   discord-bot:
     restart: always
     image: kelliedev/serverbot:latest
+    environment:
+      - NODE_ENV=production
     env_file:
       - stack.env
     expose:
