@@ -26,12 +26,6 @@ services:
     image: kelliedev/serverbot:latest
     env_file:
       - stack.env
-
-  websocket-server:
-    restart: always
-    image: kelliedev/websocket-server:latest
-    env_file:
-      - stack.env
     expose:
       - 9090 
     ports:
