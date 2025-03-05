@@ -12,10 +12,11 @@ import dotenv from "dotenv";
 import prisma from "./database";
 import Leveling from "./leveling";
 import Logging from "./logging";
+import "./services/ws";
 
 dotenv.config();
 
-const client = new Client({
+export const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
         GatewayIntentBits.GuildMessages,
@@ -24,7 +25,7 @@ const client = new Client({
     ],
 });
 
-const GUILD_ID = "811256944953262102";
+const GUILD_ID = "1341508196589633636";
 
 client.once(Events.ClientReady, async (client) => {
     console.log(`Ready! Logged in as ${client.user.tag}`);
@@ -47,7 +48,7 @@ client.once(Events.ClientReady, async (client) => {
         );
         console.log("Commands registered successfully!");
 
-        Logging.log(client.guilds.cache.get(GUILD_ID), "🟢 Bot is now online!");
+        Logging.log("🟢 Bot is now online!");
     } catch (error) {
         console.error("Error refreshing commands:", error);
     }
@@ -105,7 +106,7 @@ client.on(Events.GuildMemberRemove, async (member) => {
                 where: { id: account.user.id },
             });
 
-            Logging.log(client.guilds.cache.get(GUILD_ID), `Deleted user ${member.user.displayName} from database because they left the server!`);
+            Logging.log(`Deleted user ${member.user.displayName} from database because they left the server!`);
         }
     }
     catch (error) {
@@ -123,7 +124,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
 async function shutdown() {
     console.log("Shutdown initiated");
     try {
-        Logging.log(client.guilds.cache.get(GUILD_ID), "🔴 Bot is now offline!");
+        Logging.log("🔴 Bot is now offline!");
     } catch (error) {
         console.error("Error during shutdown:", error);
     } finally {

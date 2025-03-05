@@ -1,5 +1,6 @@
 import { TextChannel, GuildMember } from "discord.js";
 import prisma from "./database";
+import Logging from "./logging"
 
 class LevelingSystem {
     public static instance: LevelingSystem = new LevelingSystem();
@@ -76,13 +77,58 @@ class LevelingSystem {
                 }
             });
 
-            if (leveledUp && channel) {
-                await this.sendLevelUpMessage(updatedUser, newLevel, channel);
+            if (leveledUp) {
+                Logging.log(`${user.username} leveled up to level ${newLevel}!`);
+
+                if (channel) {
+                    await this.sendLevelUpMessage(updatedUser, newLevel, channel);
+                }
             }
 
             return updatedUser;
         } catch (error) {
             console.error('Error while giving XP:', error);
+            return null;
+        }
+    }
+
+    public async setXP(userId: string, newXP: number) {
+        try {
+            const user = await prisma.user.findUnique({
+                where: { 
+                    id: userId
+                }
+            });
+
+            if (!user) {
+                console.error(`User not found for ID ${userId}`);
+                return null;
+            }
+
+            let newLevel = user.level;
+            let leveledUp = false;
+
+            if (newXP >= this.getXpForNextLevel(newLevel) && newLevel < this.MAX_LEVEL) {
+                newXP = newXP - this.getXpForNextLevel(newLevel);
+                newLevel++;
+                leveledUp = true;
+            }
+
+            const updatedUser = await prisma.user.update({
+                where: { 
+                    id: userId
+                },
+                data: {
+                    lastActiveAt: new Date(),
+                    xp: newXP,
+                    level: newLevel,
+                    ...(leveledUp && { balance: user.balance + this.LEVEL_UP_BONUS })
+                }
+            });
+
+            return updatedUser;
+        } catch (error) {
+            console.error('Error while setting XP:', error);
             return null;
         }
     }

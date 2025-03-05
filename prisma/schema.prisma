@@ -15,6 +15,7 @@ enum Role {
 
 enum Platform {
   DISCORD
+  STEAM
 }
 
 model Badge {
@@ -65,6 +66,5 @@ model Account {
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([platform, platformId])
-  @@unique([platform, username])
   @@index([platformId])
 }

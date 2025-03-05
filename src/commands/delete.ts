@@ -50,6 +50,6 @@ export class DeleteDataCommand {
             flags: MessageFlags.Ephemeral,
         });
 
-        await Logging.log(interaction.guild, `Deleted data for user: ${targetUser}`);
+        await Logging.log(`Deleted data for user: ${targetUser}`);
     }
 }
