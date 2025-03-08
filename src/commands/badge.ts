@@ -1,5 +1,5 @@
-import { 
-    ChatInputCommandInteraction, 
+import {
+    ChatInputCommandInteraction,
     EmbedBuilder,
     MessageFlags,
     Colors
@@ -98,7 +98,7 @@ import prisma from "../database";
 export class BadgeCommand {
     static async execute(interaction: ChatInputCommandInteraction): Promise<void> {
         const subcommand = interaction.options.getSubcommand();
-        
+
         if (subcommand === "create") {
             const badgeName = interaction.options.getString("badge-name", true);
             const existingBadge = await prisma.badge.findUnique({ where: { name: badgeName } });
@@ -112,7 +112,7 @@ export class BadgeCommand {
             }
             const badgeDescription = interaction.options.getString("badge-description", true);
             const newBadge = await prisma.badge.create({ data: { name: badgeName, description: badgeDescription } });
-        
+
             const embed = new EmbedBuilder()
                 .setTitle("✅ Badge Created")
                 .setDescription(`Badge **${badgeName}** has been created!`)
@@ -120,7 +120,7 @@ export class BadgeCommand {
                 .setFooter({ text: `ID: ${newBadge.id}` });
             await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         }
-        
+
         // -----------------------------------------------------------------------------------------------------
         if (subcommand === "delete") {
             const badgeName = interaction.options.getString("badge-name", true);
@@ -245,7 +245,7 @@ export class BadgeCommand {
                 .setTitle("🎖️ List of Badges")
                 .setDescription(badgeList)
                 .setColor(Colors.Blue);
-            
+
             await interaction.reply({ embeds: [embed] });
         }
         // -----------------------------------------------------------------------------------------------------
@@ -269,8 +269,8 @@ export class BadgeCommand {
                 .setTitle("📝 List of Badge IDs")
                 .setDescription(badgeList)
                 .setColor(Colors.Blue);
-            
-            await interaction.reply({ embeds: [embed] });
+
+            await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         }
     }
 }
