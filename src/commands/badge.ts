@@ -2,7 +2,11 @@ import {
     ChatInputCommandInteraction,
     EmbedBuilder,
     MessageFlags,
-    Colors
+    Colors,
+    ActionRowBuilder,
+    ButtonBuilder,
+    ButtonStyle,
+    ComponentType
 } from "discord.js";
 import { Command } from "../commandHandler";
 import prisma from "../database";
@@ -84,6 +88,57 @@ import prisma from "../database";
             ]
         },
         {
+            name: "remove-all",
+            description: "Remove a badge from all users!",
+            type: 1,
+            options: [
+                {
+                    name: "badge-name",
+                    description: "The badge to remove",
+                    type: 3,
+                    required: true
+                }
+            ]
+        },        
+        {
+            name: "edit",
+            description: "Edit a badge's name or description!",
+            type: 1,
+            options: [
+                {
+                    name: "badge-name",
+                    description: "The name of the badge to edit",
+                    type: 3,
+                    required: true
+                },
+                {
+                    name: "new-name",
+                    description: "New name for the badge (optional)",
+                    type: 3,
+                    required: false
+                },
+                {
+                    name: "new-description",
+                    description: "New description for the badge (optional)",
+                    type: 3,
+                    required: false
+                }
+            ]
+        },
+        {
+            name: "id",
+            description: "Find a badge ID!",
+            type: 1,
+            options: [
+                {
+                    name: "badge-name",
+                    description: "The badge name",
+                    type: 3,
+                    required: true
+                }
+            ]
+        },
+        {
             name: "list",
             description: "List all badges!",
             type: 1
@@ -125,6 +180,7 @@ export class BadgeCommand {
         if (subcommand === "delete") {
             const badgeName = interaction.options.getString("badge-name", true);
             const existingBadge = await prisma.badge.findUnique({ where: { name: badgeName } });
+        
             if (!existingBadge) {
                 const embed = new EmbedBuilder()
                     .setTitle("⚠️ Badge Not Found")
@@ -133,12 +189,67 @@ export class BadgeCommand {
                 await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
                 return;
             }
-            await prisma.badge.delete({ where: { name: badgeName } });
+        
+            const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+                new ButtonBuilder()
+                    .setCustomId("confirm-delete-badge")
+                    .setLabel("Confirm")
+                    .setStyle(ButtonStyle.Danger),
+                new ButtonBuilder()
+                    .setCustomId("cancel-delete-badge")
+                    .setLabel("Cancel")
+                    .setStyle(ButtonStyle.Secondary)
+            );
+        
             const embed = new EmbedBuilder()
-                .setTitle("🗑️ Badge Deleted")
-                .setDescription(`Badge **${badgeName}** has been deleted!`)
-                .setColor(Colors.DarkGreen);
-            await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+                .setTitle("⚠️ Confirm Badge Deletion")
+                .setDescription(`Are you sure you want to delete the **${badgeName}** badge?\n\nThis action **cannot** be undone!`)
+                .setColor(Colors.Orange);
+        
+            const message = await interaction.reply({ embeds: [embed], components: [row], flags: MessageFlags.Ephemeral });
+        
+            const collector = message.createMessageComponentCollector({
+                componentType: ComponentType.Button,
+                time: 15000 // 15 seconds timeout
+            });
+        
+            collector.on("collect", async (btnInteraction) => {
+                if (btnInteraction.user.id !== interaction.user.id) {
+                    await btnInteraction.reply({ content: "You cannot confirm this action.", ephemeral: true });
+                    return;
+                }
+        
+                if (btnInteraction.customId === "confirm-delete-badge") {
+                    await prisma.badge.delete({ where: { name: badgeName } });
+        
+                    const successEmbed = new EmbedBuilder()
+                        .setTitle("🗑️ Badge Deleted")
+                        .setDescription(`Badge **${badgeName}** has been successfully deleted!`)
+                        .setColor(Colors.DarkGreen);
+        
+                    await interaction.editReply({ embeds: [successEmbed], components: [] });
+                } else if (btnInteraction.customId === "cancel-delete-badge") {
+                    const cancelEmbed = new EmbedBuilder()
+                        .setTitle("❌ Action Cancelled")
+                        .setDescription("The badge deletion has been cancelled.")
+                        .setColor(Colors.Grey);
+        
+                    await interaction.editReply({ embeds: [cancelEmbed], components: [] });
+                }
+        
+                collector.stop();
+            });
+        
+            collector.on("end", async (_, reason) => {
+                if (reason === "time") {
+                    const timeoutEmbed = new EmbedBuilder()
+                        .setTitle("⏳ Confirmation Timed Out")
+                        .setDescription("You took too long to respond. No badges were deleted.")
+                        .setColor(Colors.Grey);
+        
+                    await interaction.editReply({ embeds: [timeoutEmbed], components: [] });
+                }
+            });
         }
         // -----------------------------------------------------------------------------------------------------        
         if (subcommand === "add") {
@@ -225,6 +336,169 @@ export class BadgeCommand {
             await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         }
         // -----------------------------------------------------------------------------------------------------
+        if (subcommand === "remove-all") {
+            const badgeName = interaction.options.getString("badge-name", true);
+        
+            const existingBadge = await prisma.badge.findUnique({ where: { name: badgeName } });
+            if (!existingBadge) {
+                const embed = new EmbedBuilder()
+                    .setTitle("⚠️ Badge Not Found")
+                    .setDescription(`The badge **${badgeName}** does not exist!`)
+                    .setColor(Colors.Red);
+                await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+                return;
+            }
+        
+            const userBadgeCount = await prisma.userBadge.count({ where: { badgeId: existingBadge.id } });
+        
+            if (userBadgeCount === 0) {
+                const embed = new EmbedBuilder()
+                    .setTitle("⚠️ No Users Found")
+                    .setDescription(`No users currently have the **${badgeName}** badge.`)
+                    .setColor(Colors.Red);
+                await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+                return;
+            }
+        
+            const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+                new ButtonBuilder()
+                    .setCustomId("confirm-remove-all")
+                    .setLabel("Confirm")
+                    .setStyle(ButtonStyle.Danger),
+                new ButtonBuilder()
+                    .setCustomId("cancel-remove-all")
+                    .setLabel("Cancel")
+                    .setStyle(ButtonStyle.Secondary)
+            );
+        
+            const embed = new EmbedBuilder()
+                .setTitle("⚠️ Confirm Badge Removal")
+                .setDescription(`Are you sure you want to remove the **${badgeName}** badge from **${userBadgeCount}** users?`)
+                .setColor(Colors.Orange);
+        
+            const message = await interaction.reply({ embeds: [embed], components: [row], flags: MessageFlags.Ephemeral });
+        
+            const collector = message.createMessageComponentCollector({
+                componentType: ComponentType.Button,
+                time: 15 * 1000 // 15 seconds timeout
+            });
+        
+            collector.on("collect", async (btnInteraction) => {
+                if (btnInteraction.user.id !== interaction.user.id) {
+                    await btnInteraction.reply({ content: "You cannot confirm this action.", ephemeral: true });
+                    return;
+                }
+        
+                if (btnInteraction.customId === "confirm-remove-all") {
+                    await prisma.userBadge.deleteMany({ where: { badgeId: existingBadge.id } });
+        
+                    const successEmbed = new EmbedBuilder()
+                        .setTitle("✅ Badge Removed from All Users")
+                        .setDescription(`The **${badgeName}** badge has been removed from **${userBadgeCount}** users.`)
+                        .setColor(Colors.DarkGreen);
+        
+                    await interaction.editReply({ embeds: [successEmbed], components: [] });
+                } else if (btnInteraction.customId === "cancel-remove-all") {
+                    const cancelEmbed = new EmbedBuilder()
+                        .setTitle("❌ Action Cancelled")
+                        .setDescription("The badge removal has been cancelled.")
+                        .setColor(Colors.Grey);
+        
+                    await interaction.editReply({ embeds: [cancelEmbed], components: [] });
+                }
+        
+                collector.stop();
+            });
+        
+            collector.on("end", async (_, reason) => {
+                if (reason === "time") {
+                    const timeoutEmbed = new EmbedBuilder()
+                        .setTitle("⏳ Confirmation Timed Out")
+                        .setDescription("You took too long to respond. No badges were removed.")
+                        .setColor(Colors.Grey);
+        
+                    await interaction.editReply({ embeds: [timeoutEmbed], components: [] });
+                }
+            });
+        }
+        // -----------------------------------------------------------------------------------------------------        
+        if (subcommand === "edit") {
+            const badgeName = interaction.options.getString("badge-name", true);
+            const newName = interaction.options.getString("new-name", false);
+            const newDescription = interaction.options.getString("new-description", false);
+        
+            const existingBadge = await prisma.badge.findUnique({ where: { name: badgeName } });
+            if (!existingBadge) {
+                const embed = new EmbedBuilder()
+                    .setTitle("⚠️ Badge Not Found")
+                    .setDescription(`The badge **${badgeName}** does not exist!`)
+                    .setColor(Colors.Red);
+                await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+                return;
+            }
+        
+            if (!newName && !newDescription) {
+                const embed = new EmbedBuilder()
+                    .setTitle("⚠️ No Changes Provided")
+                    .setDescription(`You must provide at least a new name or a new description to update the badge.`)
+                    .setColor(Colors.Red);
+                await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+                return;
+            }
+        
+            if (newName) {
+                const nameExists = await prisma.badge.findUnique({ where: { name: newName } });
+                if (nameExists) {
+                    const embed = new EmbedBuilder()
+                        .setTitle("⚠️ Name Already Taken")
+                        .setDescription(`A badge with the name **${newName}** already exists!`)
+                        .setColor(Colors.Red);
+                    await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+                    return;
+                }
+            }
+        
+            const updatedBadge = await prisma.badge.update({
+                where: { name: badgeName },
+                data: {
+                    name: newName || badgeName,
+                    description: newDescription || existingBadge.description
+                }
+            });
+        
+            const embed = new EmbedBuilder()
+                .setTitle("✅ Badge Updated")
+                .setDescription(`The badge has been successfully updated!`)
+                .setColor(Colors.Blue)
+                .addFields(
+                    { name: "Old values", value: `Old name: \`\`${existingBadge.name}\`\`\nOld description: \`\`${existingBadge.description}\`\``, inline: true },
+                    { name: "New values", value: `New name: \`\`${updatedBadge.name}\`\`\nNew description: \`\`${updatedBadge.description}\`\``, inline: true },
+                )
+                .setFooter({ text: `ID: ${updatedBadge.id}` });
+        
+            await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+        }        
+        // -----------------------------------------------------------------------------------------------------
+        if (subcommand === "id") {
+            const badgeName = interaction.options.getString("badge-name", true);
+            const existingBadge = await prisma.badge.findUnique({ where: { name: badgeName } });
+            if (!existingBadge) {
+                const embed = new EmbedBuilder()
+                    .setTitle("⚠️ Badge Not Found")
+                    .setDescription(`The badge **${badgeName}** does not exist!`)
+                    .setColor(Colors.Red);
+                await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+                return;
+            }
+
+            const embed = new EmbedBuilder()
+                .setTitle("📝 Badge ID")
+                .setDescription(`**${existingBadge.name}**: \`\`${existingBadge.id}\`\``)
+                .setColor(Colors.Blue);
+
+            await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+        }
+        // -----------------------------------------------------------------------------------------------------
         if (subcommand === "list") {
             const badges = await prisma.badge.findMany();
             if (badges.length === 0) {
@@ -272,5 +546,6 @@ export class BadgeCommand {
 
             await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         }
+        // -----------------------------------------------------------------------------------------------------
     }
 }
