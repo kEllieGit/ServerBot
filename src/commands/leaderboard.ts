@@ -35,7 +35,7 @@ export class LeaderboardCommand {
                 orderBy: {
                     balance: 'desc',
                 },
-                take: 25,
+                take: 10,
             });
 
             if (users.length === 0) {
@@ -52,9 +52,20 @@ export class LeaderboardCommand {
 
             users.forEach(user => {
                 let emoji = '';
-                if (rank === 1) emoji = '🥇';
-                else if (rank === 2) emoji = '🥈';
-                else if (rank === 3) emoji = '🥉';
+                switch (rank) {
+                    case 1:
+                        emoji = '🥇';
+                        break;
+                    case 2:
+                        emoji = '🥈';
+                        break;
+                    case 3:
+                        emoji = '🥉';
+                        break;
+                    default:
+                        emoji = '';
+                        break;
+                }
 
                 usersText += `${emoji} \`\`#${rank.toString()}\`\` **${user.username}**: ${user.balance}$\n`;
                 rank++;
@@ -78,7 +89,7 @@ export class LeaderboardCommand {
                         xp: 'desc',
                     },
                 ],
-                take: 25,
+                take: 10,
             });
 
             if (users.length === 0) {
@@ -95,9 +106,21 @@ export class LeaderboardCommand {
 
             users.forEach(user => {
                 let emoji = '';
-                if (rank === 1) emoji = '🥇';
-                else if (rank === 2) emoji = '🥈';
-                else if (rank === 3) emoji = '🥉';
+                switch (rank) {
+                    case 1:
+                        emoji = '🥇';
+                        break;
+                    case 2:
+                        emoji = '🥈';
+                        break;
+                    case 3:
+                        emoji = '🥉';
+                        break;
+                    default:
+                        emoji = '';
+                        break;
+                }
+
 
                 usersText += `${emoji} \`\`#${rank.toString()}\`\` **${user.username}**: Level ${user.level} (${user.xp} xp)\n`;
                 rank++;
@@ -116,7 +139,7 @@ export class LeaderboardCommand {
                 orderBy: {
                     streak: 'desc',
                 },
-                take: 25,
+                take: 10,
             });
 
             if (users.length === 0) {
@@ -133,9 +156,21 @@ export class LeaderboardCommand {
 
             users.forEach(user => {
                 let emoji = '';
-                if (rank === 1) emoji = '🥇';
-                else if (rank === 2) emoji = '🥈';
-                else if (rank === 3) emoji = '🥉';
+                switch (rank) {
+                    case 1:
+                        emoji = '🥇';
+                        break;
+                    case 2:
+                        emoji = '🥈';
+                        break;
+                    case 3:
+                        emoji = '🥉';
+                        break;
+                    default:
+                        emoji = '';
+                        break;
+                }
+
 
                 usersText += `${emoji} \`\`#${rank.toString()}\`\` **${user.username}**: \`\`${user.streak}\`\` day(s)\n`;
                 rank++;
@@ -179,7 +214,7 @@ export class LeaderboardCommand {
             let badgesWithRarity = badges.map(badge => {
                 const numberOfUsersWithBadge = badge.users.length;
                 const rarity = parseFloat(((numberOfUsersWithBadge / totalUsers) * 100).toFixed(2));
-                return { badge, rarity }; 
+                return { badge, rarity };
             });
 
             badgesWithRarity.sort((a, b) => a.rarity - b.rarity);
@@ -189,11 +224,24 @@ export class LeaderboardCommand {
 
             badgesWithRarity.forEach(({ badge, rarity }) => {
                 let emoji = '';
-                if(rarity > 75) emoji = '';
-                else if (rarity > 50) emoji = '🥉';
-                else if (rarity > 20) emoji = '🥈';
-                else if (rarity > 5) emoji = '🥇';
-                else emoji = ':gem:';
+                switch (true) {
+                    case (rarity > 75):
+                        emoji = '';
+                        break;
+                    case (rarity > 50):
+                        emoji = '🥉';
+                        break;
+                    case (rarity > 20):
+                        emoji = '🥈';
+                        break;
+                    case (rarity > 5):
+                        emoji = '🥇';
+                        break;
+                    default:
+                        emoji = ':gem:'; // For rarity <= 5
+                        break;
+                }
+
 
                 badgeText += `\`\`#${rank.toString()}\`\` **${badge.name}**: ${rarity}% ${emoji}\n`;
                 rank++;
