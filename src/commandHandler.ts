@@ -1,19 +1,26 @@
-import { ChatInputCommandInteraction, ApplicationCommandOptionType, MessageFlags } from "discord.js";
+import { 
+    ChatInputCommandInteraction, 
+    ApplicationCommandOptionType, 
+    MessageFlags 
+} from "discord.js";
 import { readdirSync } from "fs";
 import { join } from "path";
 import prisma from "./database";
 
 type CommandExecute = (interaction: ChatInputCommandInteraction) => Promise<void>;
 
+interface CommandOption {
+    name: string;
+    description: string;
+    type: ApplicationCommandOptionType;
+    required?: boolean;
+    options?: CommandOption[]; // 🔥 Allows nesting (for subcommands & groups)
+}
+
 interface Command {
     name: string;
     description: string;
-    options?: {
-        name: string;
-        description: string;
-        type: ApplicationCommandOptionType;
-        required?: boolean;
-    }[];
+    options?: CommandOption[];  // 🔥 Now supports nested options
     registrationRequired?: boolean;
     requiredRole?: string;
     execute: CommandExecute;
@@ -21,6 +28,7 @@ interface Command {
 
 const commands: Command[] = [];
 
+// 🔹 Modifies the `Command` decorator to support nested options
 export function Command(data: Omit<Command, "execute">) {
     return function (target: { execute: CommandExecute }) {
         const wrappedExecute: CommandExecute = async (interaction) => {
@@ -29,11 +37,11 @@ export function Command(data: Omit<Command, "execute">) {
                 include: { user: true }
             });
 
-            // First check if registration is required
+            // Check if registration is required
             if (data.registrationRequired || data.requiredRole) {
                 if (!account || !account.user) {
                     await interaction.reply({ 
-                        content: "To use this command you must be registered. Use the /register command to register!", 
+                        content: "To use this command, you must be registered. Use `/register` to register!", 
                         flags: MessageFlags.Ephemeral,
                     });
                     return;
@@ -48,14 +56,13 @@ export function Command(data: Omit<Command, "execute">) {
 
                 if (data.requiredRole && account.user.role !== data.requiredRole) {
                     await interaction.reply({ 
-                        content: `This command requires the ${data.requiredRole} role!`, 
+                        content: `This command requires the **${data.requiredRole}** role!`, 
                         flags: MessageFlags.Ephemeral,
                     });
                     return;
                 }
             }
 
-            // Execute the actual command
             await target.execute(interaction);
         };
 
@@ -63,6 +70,7 @@ export function Command(data: Omit<Command, "execute">) {
     };
 }
 
+// 🔹 Allows for properly structured nested options
 export function getCommands(): Command[] {
     if (commands.length > 0) return commands;
 
