@@ -15,7 +15,9 @@ interface CommandOption {
     type: ApplicationCommandOptionType;
     required?: boolean;
     options?: CommandOption[];
+    choices?: { name: string; value: string }[];
 }
+
 
 interface Command {
     name: string;
