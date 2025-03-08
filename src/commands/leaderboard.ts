@@ -21,7 +21,7 @@ import prisma from "../database";
                 { name: "Balance", value: "balance" },
                 { name: "Level", value: "level" },
                 { name: "Badge Rarity", value: "badge-rarity" },
-                { name: "Streak", value: "streak" }  // Add streak option
+                { name: "Streak", value: "streak" }
             ]
         }
     ]
