@@ -211,7 +211,20 @@ export class LeaderboardCommand {
                 return;
             }
 
-            let badgesWithRarity = badges.map(badge => {
+            const blacklistedBadgeNames = ['Developer', 'Insert other badges here if there are any that need to be added'];
+
+            const filteredBadges = badges.filter(badge => !blacklistedBadgeNames.includes(badge.name));
+
+            if (filteredBadges.length === 0) {
+                const embed = new EmbedBuilder()
+                    .setTitle("⚠️ No Valid Badges Found")
+                    .setDescription("There are no badges available to calculate rarity after filtering out blacklisted badges!")
+                    .setColor(Colors.Red);
+                await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+                return;
+            }
+
+            let badgesWithRarity = filteredBadges.map(badge => {
                 const numberOfUsersWithBadge = badge.users.length;
                 const rarity = parseFloat(((numberOfUsersWithBadge / totalUsers) * 100).toFixed(2));
                 return { badge, rarity };
@@ -242,7 +255,6 @@ export class LeaderboardCommand {
                         break;
                 }
 
-
                 badgeText += `\`\`#${rank.toString()}\`\` **${badge.name}**: ${rarity}% ${emoji}\n`;
                 rank++;
             });
@@ -261,5 +273,6 @@ export class LeaderboardCommand {
                 .setColor(Colors.Gold);
             await interaction.reply({ embeds: [embed] });
         }
+
     }
 }
