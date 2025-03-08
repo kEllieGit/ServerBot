@@ -211,7 +211,7 @@ export class LeaderboardCommand {
                 return;
             }
 
-            const blacklistedBadgeNames = ['Developer', 'Insert other badges here if there are any that need to be added'];
+            const blacklistedBadgeNames = ['Developer', '']; // Insert other badges here if there are any that need to be added
 
             const filteredBadges = badges.filter(badge => !blacklistedBadgeNames.includes(badge.name));
 
