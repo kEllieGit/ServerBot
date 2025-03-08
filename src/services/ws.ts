@@ -5,7 +5,7 @@ import Leveling from "../leveling";
 import { CodeStorage } from "../codeStorage";
 import { mergeUsers } from "../mergeUsers";
 import { client } from "../index"
-const wss = new WebSocketServer({ port: 8080 });
+const wss = new WebSocketServer({ port: 9090 });
 
 interface WebsocketMessage {
 	type: string;
@@ -176,6 +176,7 @@ wss.on("connection", (ws) => {
 	ws.on("message", async (message: string) => {
 		try {
 			const data = JSON.parse(message) as WebsocketMessage;
+			Logging.log(`✉️ Received Message Type: ${data.type} | Content: ${data.content}`);
 
 			if (data.type && messageHandlers[data.type]) {
 				const result = await messageHandlers[data.type](data);

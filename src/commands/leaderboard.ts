@@ -10,9 +10,14 @@ export class LeaderboardCommand {
     static async execute(interaction: ChatInputCommandInteraction) {
         try {
             const topUsers = await prisma.user.findMany({
-                orderBy: {
-                    level: "desc",
-                },
+                orderBy: [
+                    {
+                        level: "desc",
+                    },
+                    {
+                        xp: "desc", // Secondary sorting by XP when levels are the same
+                    }
+                ],
                 take: 5,
             });
 
@@ -30,7 +35,7 @@ export class LeaderboardCommand {
                 .map((user, index) => {
                     const medal = index < 3 ? `${medals[index]} ` : "   ";
                     const rank = `\`#${(index + 1).toString()}\``;
-                    const levelInfo = `Level ${user.level}`;
+                    const levelInfo = `Level ${user.level} (${user.xp} XP)`;
                     
                     return `${medal}${rank} **${user.username}** - ${levelInfo}`;
                 })
@@ -42,11 +47,28 @@ export class LeaderboardCommand {
             });
     
             if (userData && !topUsers.some(user => user.id === userData.user.id)) {
+                // Count users with higher level OR same level but higher XP
                 const userRank = await prisma.user.count({
                     where: {
-                        level: {
-                            gt: userData.user.level
-                        }
+                        OR: [
+                            {
+                                level: {
+                                    gt: userData.user.level
+                                }
+                            },
+                            {
+                                AND: [
+                                    {
+                                        level: userData.user.level
+                                    },
+                                    {
+                                        xp: {
+                                            gt: userData.user.xp
+                                        }
+                                    }
+                                ]
+                            }
+                        ]
                     }
                 });
 
@@ -58,7 +80,6 @@ export class LeaderboardCommand {
             }
 
             const totalUsers = await prisma.user.count();
-            
             const leaderboardEmbed = new EmbedBuilder()
                 .setColor("#FFD700")
                 .setTitle("🏆 Level Leaderboard")

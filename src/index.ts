@@ -12,6 +12,7 @@ import dotenv from "dotenv";
 import prisma from "./database";
 import Leveling from "./leveling";
 import Logging from "./logging";
+import { Config } from "./config";
 import "./services/ws";
 
 dotenv.config();
@@ -25,8 +26,6 @@ export const client = new Client({
     ],
 });
 
-const GUILD_ID = "1341508196589633636";
-
 client.once(Events.ClientReady, async (client) => {
     console.log(`Ready! Logged in as ${client.user.tag}`);
     client.user.setPresence({
@@ -34,7 +33,7 @@ client.once(Events.ClientReady, async (client) => {
         status: "online",
     });
 
-    const rest = new REST().setToken(process.env.TOKEN!);
+    const rest = new REST().setToken(Config.token);
     const commands = getCommands().map(({ name, description, options }) => ({
         name,
         description,
@@ -43,7 +42,7 @@ client.once(Events.ClientReady, async (client) => {
 
     try {
         await rest.put(
-            Routes.applicationGuildCommands(client.user.id, GUILD_ID),
+            Routes.applicationGuildCommands(client.user.id, Config.guild_id),
             { body: commands }
         );
         console.log("Commands registered successfully!");
@@ -144,4 +143,4 @@ client.on(Events.ShardError, async (error, shardId) => {
     await shutdown();
 });
 
-client.login(process.env.TOKEN);
+client.login(Config.token);

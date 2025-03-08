@@ -20,8 +20,15 @@ services:
       interval: 5s
       timeout: 10s
       retries: 3
+
   discord-bot:
     restart: always
     image: kelliedev/serverbot:latest
+    environment:
+      - NODE_ENV=production
     env_file:
       - stack.env
+    expose:
+      - 9090 
+    ports:
+      - 9090:9090
