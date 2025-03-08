@@ -210,7 +210,7 @@ export class BadgeCommand {
         
             const collector = message.createMessageComponentCollector({
                 componentType: ComponentType.Button,
-                time: 15000 // 15 seconds timeout
+                time: 15 * 1000 // 15 seconds timeout
             });
         
             collector.on("collect", async (btnInteraction) => {
@@ -471,8 +471,8 @@ export class BadgeCommand {
                 .setDescription(`The badge has been successfully updated!`)
                 .setColor(Colors.Blue)
                 .addFields(
-                    { name: "Old values", value: `Old name: \`\`${existingBadge.name}\`\`\nOld description: \`\`${existingBadge.description}\`\``, inline: true },
-                    { name: "New values", value: `New name: \`\`${updatedBadge.name}\`\`\nNew description: \`\`${updatedBadge.description}\`\``, inline: true },
+                    { name: "Old", value: `Name: \`\`${existingBadge.name}\`\`\nDescription: \`\`${existingBadge.description}\`\``, inline: true },
+                    { name: "New", value: `Name: \`\`${updatedBadge.name}\`\`\nDescription: \`\`${updatedBadge.description}\`\``, inline: true },
                 )
                 .setFooter({ text: `ID: ${updatedBadge.id}` });
         
