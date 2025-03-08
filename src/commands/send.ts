@@ -77,7 +77,7 @@ export class SendCommand {
 
         if (!recipient || !recipient.user) {
             await interaction.reply({
-                content: "The recipient doesn't have an account yet!",
+                content: "The recipient isn't registered yet!",
                 flags: MessageFlags.Ephemeral,
             });
             return;
@@ -90,7 +90,7 @@ export class SendCommand {
             });
             return;
         }
-        
+
         await prisma.$transaction([
             prisma.user.update({
                 where: { id: sender.user.id },
@@ -105,12 +105,15 @@ export class SendCommand {
         const embed = new EmbedBuilder()
             .setColor("#0099ff")
             .setTitle("💸 Money Sent 💸")
-            .setDescription(`You sent ${amount}$ to ${targetUser.username}.`)
+            .setDescription(`You sent ${amount}$ to <@${targetUser.id}>.`)
             .addFields(
-                { name: "Your New Balance", value: `${sender.user.balance - amount}$`, inline: true },
-                { name: "Recipient's New Balance", value: `${recipient.user.balance + amount}$`, inline: true },
+                { name: `${interaction.user.displayName}'s Balance:`, value: `${sender.user.balance - amount}$`, inline: true },
+                { name: `${targetUser.displayName}'s Balance:`, value: `${recipient.user.balance + amount}$`, inline: true },
             );
 
-        await interaction.reply({ embeds: [embed] });
+        await interaction.reply({
+            content: `<@${targetUser.id}>, you've received ${amount}$ from <@${interaction.user.id}>!\n`,
+            embeds: [embed]
+        });
     }
 }
