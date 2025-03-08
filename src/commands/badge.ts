@@ -111,13 +111,16 @@ export class BadgeCommand {
                 return;
             }
             const badgeDescription = interaction.options.getString("badge-description", true);
-            await prisma.badge.create({ data: { name: badgeName, description: badgeDescription } });
+            const newBadge = await prisma.badge.create({ data: { name: badgeName, description: badgeDescription } });
+        
             const embed = new EmbedBuilder()
                 .setTitle("✅ Badge Created")
                 .setDescription(`Badge **${badgeName}** has been created!`)
-                .setColor(Colors.DarkGreen);
+                .setColor(Colors.DarkGreen)
+                .setFooter({ text: `ID: ${newBadge.id}` });
             await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         }
+        
         // -----------------------------------------------------------------------------------------------------
         if (subcommand === "delete") {
             const badgeName = interaction.options.getString("badge-name", true);
@@ -259,7 +262,7 @@ export class BadgeCommand {
 
             let badgeList = "";
             badges.forEach(badge => {
-                badgeList += `**${badge.name}**: ${badge.id}\n`;
+                badgeList += `**${badge.name}**: \`\`${badge.id}\`\`\n`;
             });
 
             const embed = new EmbedBuilder()
