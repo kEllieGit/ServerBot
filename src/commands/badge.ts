@@ -118,7 +118,7 @@ export class BadgeCommand {
                 .setColor(Colors.DarkGreen);
             await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         }
-        
+        // -----------------------------------------------------------------------------------------------------
         if (subcommand === "delete") {
             const badgeName = interaction.options.getString("badge-name", true);
             const existingBadge = await prisma.badge.findUnique({ where: { name: badgeName } });
@@ -137,7 +137,7 @@ export class BadgeCommand {
                 .setColor(Colors.DarkGreen);
             await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         }
-        
+        // -----------------------------------------------------------------------------------------------------        
         if (subcommand === "add") {
             const user = interaction.options.getUser("user", true);
             const badgeName = interaction.options.getString("badge-name", true);
@@ -166,7 +166,7 @@ export class BadgeCommand {
                 .setColor(Colors.DarkGreen);
             await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         }
-
+        // -----------------------------------------------------------------------------------------------------
         if (subcommand === "remove") {
             const user = interaction.options.getUser("user", true);
             const badgeName = interaction.options.getString("badge-name", true);
@@ -221,7 +221,7 @@ export class BadgeCommand {
                 .setColor(Colors.DarkGreen);
             await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         }
-
+        // -----------------------------------------------------------------------------------------------------
         if (subcommand === "list") {
             const badges = await prisma.badge.findMany();
             if (badges.length === 0) {
@@ -245,7 +245,7 @@ export class BadgeCommand {
             
             await interaction.reply({ embeds: [embed] });
         }
-
+        // -----------------------------------------------------------------------------------------------------
         if (subcommand === "ids") {
             const badges = await prisma.badge.findMany();
             if (badges.length === 0) {

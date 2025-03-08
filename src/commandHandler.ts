@@ -14,13 +14,13 @@ interface CommandOption {
     description: string;
     type: ApplicationCommandOptionType;
     required?: boolean;
-    options?: CommandOption[]; // 🔥 Allows nesting (for subcommands & groups)
+    options?: CommandOption[];
 }
 
 interface Command {
     name: string;
     description: string;
-    options?: CommandOption[];  // 🔥 Now supports nested options
+    options?: CommandOption[];
     registrationRequired?: boolean;
     requiredRole?: string;
     execute: CommandExecute;
@@ -28,7 +28,6 @@ interface Command {
 
 const commands: Command[] = [];
 
-// 🔹 Modifies the `Command` decorator to support nested options
 export function Command(data: Omit<Command, "execute">) {
     return function (target: { execute: CommandExecute }) {
         const wrappedExecute: CommandExecute = async (interaction) => {
@@ -37,7 +36,6 @@ export function Command(data: Omit<Command, "execute">) {
                 include: { user: true }
             });
 
-            // Check if registration is required
             if (data.registrationRequired || data.requiredRole) {
                 if (!account || !account.user) {
                     await interaction.reply({ 
@@ -70,7 +68,6 @@ export function Command(data: Omit<Command, "execute">) {
     };
 }
 
-// 🔹 Allows for properly structured nested options
 export function getCommands(): Command[] {
     if (commands.length > 0) return commands;
 
